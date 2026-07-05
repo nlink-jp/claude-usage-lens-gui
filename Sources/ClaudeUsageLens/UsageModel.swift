@@ -6,7 +6,8 @@ import Foundation
 /// mutations are hopped back to main.
 final class UsageModel: ObservableObject {
     @Published var todaySummary: Summary?
-    @Published var lastError: String?
+    @Published var lastError: String?       // short, user-facing summary
+    @Published var lastErrorDetail: String? // raw CLI output, shown smaller
     @Published var lastUpdated: Date?
 
     // Analysis window state
@@ -65,13 +66,23 @@ final class UsageModel: ObservableObject {
                 DispatchQueue.main.async {
                     self?.todaySummary = s
                     self?.lastError = nil
+                    self?.lastErrorDetail = nil
                     self?.lastUpdated = Date()
                 }
             } catch {
-                DispatchQueue.main.async {
-                    self?.lastError = (error as? LocalizedError)?.errorDescription ?? "\(error)"
-                }
+                self?.setError(error)
             }
+        }
+    }
+
+    /// Set the user-facing error summary plus the raw CLI detail (issue #2), on
+    /// the main thread.
+    private func setError(_ error: Error) {
+        let summary = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+        let detail = (error as? CLIError)?.failureReason
+        DispatchQueue.main.async { [weak self] in
+            self?.lastError = summary
+            self?.lastErrorDetail = detail
         }
     }
 
@@ -95,11 +106,10 @@ final class UsageModel: ObservableObject {
                     self?.modelRows = models
                     self?.projectRows = projects
                     self?.lastError = nil
+                    self?.lastErrorDetail = nil
                 }
             } catch {
-                DispatchQueue.main.async {
-                    self?.lastError = (error as? LocalizedError)?.errorDescription ?? "\(error)"
-                }
+                self?.setError(error)
             }
         }
     }

@@ -35,7 +35,16 @@ struct PopoverView: View {
             } else if let err = model.lastError {
                 Label("Couldn't load usage", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
-                Text(err).font(.caption).foregroundStyle(.secondary).lineLimit(4)
+                Text(err)
+                    .font(.callout)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let detail = model.lastErrorDetail {
+                    Text(detail)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(3)
+                        .textSelection(.enabled)
+                }
             } else {
                 HStack { Spacer(); ProgressView(); Spacer() }.frame(height: 60)
             }

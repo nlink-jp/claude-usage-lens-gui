@@ -46,6 +46,10 @@ scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh (.app pipelin
   started once from `makeModel()`.
 - **CLI work off the main thread**: `UsageModel` runs the CLI on a serial
   background queue and hops `@Published` writes back to main.
+- **Error surfacing**: a CLI failure becomes a friendly summary via the pure
+  `CLIError.summarize` (crash / permission / missing path / first stderr line);
+  `UsageModel` exposes `lastError` (summary) + `lastErrorDetail` (raw), and the
+  popover shows the summary with the raw output as smaller, selectable detail.
 - **Signing**: `--deep` signs the bundled CLI too. Pure SwiftUI/AppKit needs no
   entitlements (Hardened Runtime alone). Notarize + staple the `.app`.
 - **Native, not Wails**: deliberate deviation from the CLI's RFP — a menu-bar

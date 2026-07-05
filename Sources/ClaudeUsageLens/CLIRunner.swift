@@ -2,15 +2,49 @@ import Foundation
 
 enum CLIError: LocalizedError {
     case binaryNotFound
-    case runFailed(String)
+    case launchFailed(detail: String)
+    case runFailed(summary: String, detail: String)
 
+    /// A short, user-facing summary (shown prominently).
     var errorDescription: String? {
         switch self {
         case .binaryNotFound:
             return "claude-usage-lens CLI not found. Reinstall ClaudeUsageLens.app (the CLI ships bundled), or install claude-usage-lens on your PATH."
-        case .runFailed(let msg):
-            return msg.isEmpty ? "claude-usage-lens exited with an error." : msg
+        case .launchFailed:
+            return "Couldn't start the claude-usage-lens CLI. Reinstall the app if this keeps happening."
+        case .runFailed(let summary, _):
+            return summary
         }
+    }
+
+    /// The raw CLI output (shown as smaller secondary detail), if any.
+    var failureReason: String? {
+        switch self {
+        case .binaryNotFound: return nil
+        case .launchFailed(let d): return d.isEmpty ? nil : d
+        case .runFailed(_, let d): return d.isEmpty ? nil : d
+        }
+    }
+
+    /// Translate a CLI failure into a short, actionable summary. Pure (testable):
+    /// the raw stderr stays available separately as the detail.
+    static func summarize(exitCode: Int32, crashed: Bool, stderr: String) -> String {
+        let s = stderr.lowercased()
+        if crashed {
+            return "The usage CLI stopped unexpectedly. Try Refresh; if it keeps happening, reinstall the app."
+        }
+        if s.contains("permission denied") || s.contains("operation not permitted") {
+            return "Couldn't read your Claude logs (permission denied). Check that the app can access ~/.claude and Claude's local sessions."
+        }
+        if s.contains("no such file") || s.contains("cannot find") {
+            return "A required path wasn't found. Run Claude Code or Cowork first, or verify the CLI's source paths (claude-usage-lens doctor)."
+        }
+        let trimmed = stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return "The usage CLI exited with an error (code \(exitCode))."
+        }
+        let firstLine = trimmed.split(separator: "\n", maxSplits: 1).first.map(String.init) ?? trimmed
+        return "The usage CLI reported: \(firstLine)"
     }
 }
 
@@ -76,15 +110,23 @@ enum CLIRunner {
         let errPipe = Pipe()
         proc.standardOutput = outPipe
         proc.standardError = errPipe
-        try proc.run()
+        do {
+            try proc.run()
+        } catch {
+            throw CLIError.launchFailed(detail: error.localizedDescription)
+        }
         // Read stdout to EOF (unblocks when the process exits), then reap.
         let data = outPipe.fileHandleForReading.readDataToEndOfFile()
         proc.waitUntilExit()
         if proc.terminationStatus != 0 {
-            let err = String(
+            let stderr = String(
                 data: errPipe.fileHandleForReading.readDataToEndOfFile(),
-                encoding: .utf8) ?? ""
-            throw CLIError.runFailed(err.trimmingCharacters(in: .whitespacesAndNewlines))
+                encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let crashed = proc.terminationReason == .uncaughtSignal
+            throw CLIError.runFailed(
+                summary: CLIError.summarize(exitCode: proc.terminationStatus, crashed: crashed, stderr: stderr),
+                detail: stderr
+            )
         }
         return data
     }

@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Friendlier CLI error messages ([#2](https://github.com/nlink-jp/claude-usage-lens-gui/issues/2)):
+  the popover now shows a short, actionable summary (permission denied, an
+  unexpected CLI crash, a missing path, or the CLI's first error line) with the
+  raw output kept as smaller, selectable detail — instead of surfacing bare
+  stderr. The classification is a pure, unit-tested `CLIError.summarize`.
+
 ## [0.1.1] - 2026-07-05
 
 Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).

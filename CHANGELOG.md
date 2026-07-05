@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- App icon — a magnifying glass over a usage waveform. Source
+  `assets/AppIcon-1024.png` is turned into `AppIcon.icns` by
+  `scripts/make-icns.sh` (sips + iconutil) and bundled by `make build-app`, wired
+  through `CFBundleIconFile`. Shows in Finder / Get Info / Spotlight (the app is a
+  menu-bar agent, so it has no Dock icon).
+
 ## [0.1.2] - 2026-07-05
 
 Bundles `claude-usage-lens` v0.2.2 (unchanged).

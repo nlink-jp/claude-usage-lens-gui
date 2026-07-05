@@ -19,6 +19,10 @@ NOTARY_PROFILE    ?= nlink-jp-notary
 CODESIGN_SCRIPT := scripts/codesign-darwin-app.sh
 NOTARIZE_SCRIPT := scripts/notarize-darwin-app.sh
 
+# App icon: a 1024x1024 source PNG; build-app generates AppIcon.icns into the
+# bundle's Resources (sips + iconutil). Missing source → app builds without icon.
+ICON_SRC := assets/AppIcon-1024.png
+
 .PHONY: build build-app package test clean run
 
 ## build: build the release binary
@@ -38,6 +42,11 @@ build-app: build
 		echo "[bundle] embedded CLI from $(CLI_BIN)"; \
 	else \
 		echo "[bundle] WARN: CLI binary $(CLI_BIN) not found — app will locate it via PATH / \$$CLAUDE_USAGE_LENS_BIN at runtime"; \
+	fi
+	@if [ -f "$(ICON_SRC)" ]; then \
+		scripts/make-icns.sh "$(ICON_SRC)" $(APP_BUNDLE)/Contents/Resources/AppIcon.icns; \
+	else \
+		echo "[icon] WARN: $(ICON_SRC) not found — building without an app icon"; \
 	fi
 	@$(CODESIGN_SCRIPT) $(APP_BUNDLE) "$(CODESIGN_IDENTITY)"
 	@echo "Built $(APP_BUNDLE) ($(VERSION))"

@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-07-05
+
+Bundles `claude-usage-lens` v0.2.2 (unchanged).
+
 ### Added
 - App icon — a magnifying glass over a usage waveform. Source
   `assets/AppIcon-1024.png` is turned into `AppIcon.icns` by
@@ -69,7 +73,8 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.3
 [0.1.2]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.2
 [0.1.1]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.1
 [0.1.0]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.0

@@ -13,6 +13,7 @@ final class UsageModel: ObservableObject {
 
     // Analysis window state
     @Published var period: String = "7d"
+    @Published var periodSummary: Summary?  // total/tokens for the selected period (same summary derivation as the popover)
     @Published var dailyRows: [Row] = []
     @Published var dailyByModelRows: [Row] = [] // group-by day,model — for the stacked view
     @Published var modelRows: [Row] = []
@@ -99,6 +100,9 @@ final class UsageModel: ObservableObject {
                 // Dense + a calendar-aligned start so the daily chart shows exactly
                 // N contiguous days (empty days as $0), matching the "N days" label.
                 let since = Self.calendarSince(period)
+                // Authoritative period total (same summary derivation the popover
+                // uses), so the panel's total reconciles with the charts and popover.
+                let summary = try CLIRunner.summary(since: since)
                 let daily = try CLIRunner.rows(groupBy: "day", since: since, dense: true)
                 // day,model composite for the stacked view (dense is single-dim only,
                 // so gaps just render as missing columns here).
@@ -109,6 +113,7 @@ final class UsageModel: ObservableObject {
                 let models = try CLIRunner.rows(groupBy: "model", since: since, sort: "cost")
                 let projects = try CLIRunner.rows(groupBy: "project", since: since, sort: "cost", top: 8)
                 DispatchQueue.main.async {
+                    self?.periodSummary = summary
                     self?.dailyRows = daily
                     self?.dailyByModelRows = dailyByModel
                     self?.modelRows = models

@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Analysis panel now shows the **period total** (cost + tokens) in a header —
+  previously it had per-model/per-project breakdowns but no overall total. It's
+  the same summary derivation the popover's "Last 30 days" uses, so the panel
+  total, the charts, and the popover all reconcile.
+
 ### Fixed
 - 30-day cost figures now reconcile. The analysis panel's **by-model** and
   **top-projects** charts used a rolling `Nd` window while the daily chart used a

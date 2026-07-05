@@ -42,6 +42,8 @@ struct AnalysisView: View {
         GeometryReader { geo in
             let wide = geo.size.width > 560
             VStack(spacing: 14) {
+                periodHeader
+
                 dailyBox
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -73,6 +75,30 @@ struct AnalysisView: View {
         }
         .onChange(of: model.period) { _, _ in model.loadAnalysis() }
         .onAppear { model.loadAnalysis() }
+    }
+
+    // MARK: - Period total
+
+    /// The period's overall total (cost + tokens) — the same summary the popover's
+    /// "Last 30 days" uses, so every surface reconciles.
+    private var periodHeader: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(periodLabel).font(.headline)
+            Spacer()
+            if let s = model.periodSummary {
+                Text("\(PopoverView.compact(s.inputTokens + s.outputTokens + s.cacheTokens)) tokens")
+                    .font(.callout).foregroundStyle(.secondary)
+                Text(String(format: "$%.2f", s.totalUSD))
+                    .font(.title3.weight(.semibold)).monospacedDigit()
+            }
+        }
+    }
+
+    private var periodLabel: String {
+        if model.period.hasSuffix("d"), let n = Int(model.period.dropLast()) {
+            return "Last \(n) days"
+        }
+        return "Selected period"
     }
 
     // MARK: - Boxes

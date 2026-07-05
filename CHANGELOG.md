@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- Getting Started guide (`docs/en/getting-started.md`, `docs/ja/getting-started.ja.md`)
+  — install, first run, keeping usage history complete (Login Items / CLI
+  daemon), data locations, and troubleshooting. Linked from the READMEs.
+
 ## [0.1.0] - 2026-07-05
 
 ### Added

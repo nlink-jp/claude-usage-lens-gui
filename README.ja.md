@@ -4,8 +4,11 @@
 分析ができる macOS アプリ。[`claude-usage-lens`](https://github.com/nlink-jp/claude-usage-lens)
 CLI の薄いネイティブフロントエンドで、解析・単価・集計はすべて CLI が担当します。
 
-> **ステータス: WIP（scaffold + MVP）。** メニューバーのコスト表示・本日ポップオーバー・
-> 分析ウィンドウ（日次/モデル/プロジェクト別チャート）が動作。macOS 14+ 専用。
+macOS 14+（Apple シリコン）専用。リリース済み — Developer ID 署名 + notarize 済み。
+
+> **はじめての方は [セットアップガイド](docs/ja/getting-started.ja.md)**
+> ([English](docs/en/getting-started.md)) を参照 — インストール・初回起動・
+> 利用履歴を欠けさせないコツ。
 
 ## 機能
 

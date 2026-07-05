@@ -5,8 +5,11 @@ expands into graphical analysis. It's a thin native front-end over the
 [`claude-usage-lens`](https://github.com/nlink-jp/claude-usage-lens) CLI — the
 CLI does all parsing/pricing/aggregation and this app renders it.
 
-> **Status: WIP (scaffold + MVP).** Menu-bar cost, today's popover, and the
-> analysis window (daily / model / project charts) work. macOS 14+ only.
+macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
+
+> **New here? See the [Getting Started guide](docs/en/getting-started.md)**
+> ([日本語](docs/ja/getting-started.ja.md)) — install, first run, and keeping
+> your usage history complete.
 
 ## What it does
 

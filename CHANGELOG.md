@@ -5,11 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-07-05
+
+Bundles `claude-usage-lens` **v0.3.0** (local-timezone day boundaries).
+
 ### Changed
 - Day boundaries / "today" now follow your **local timezone**. The app computes
   its date windows locally and passes `--tz local` to the CLI, so "Today" and the
-  daily chart reset at your local midnight — not UTC. (Requires
-  `claude-usage-lens` with `--tz`.)
+  daily chart reset at your local midnight — not UTC.
 
 ## [0.1.4] - 2026-07-05
 
@@ -98,7 +101,8 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.5
 [0.1.4]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.4
 [0.1.3]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.3
 [0.1.2]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.2

@@ -35,4 +35,54 @@ final class DecodeTests: XCTestCase {
         XCTAssertEqual(PopoverView.compact(12_345), "12.3K")
         XCTAssertEqual(PopoverView.compact(1_234_567), "1.2M")
     }
+
+    func testAxisDayLabels() {
+        // Short ranges pass through unchanged.
+        let week = (1...7).map { String(format: "2026-07-%02d", $0) }
+        XCTAssertEqual(AnalysisView.axisDayLabels(week), week)
+
+        // Long ranges are thinned to ~maxLabels, keeping first and last.
+        let quarter = (1...90).map { String(format: "d%02d", $0) }
+        let thinned = AnalysisView.axisDayLabels(quarter, maxLabels: 12)
+        XCTAssertLessThanOrEqual(thinned.count, 14)
+        XCTAssertGreaterThan(thinned.count, 8)
+        XCTAssertEqual(thinned.first, quarter.first)
+        XCTAssertEqual(thinned.last, quarter.last)
+    }
+
+    func testUniqueShortLabels() {
+        // Same basename under different parents ⇒ disambiguated with parent.
+        let keys = [
+            "/Users/magi/works/nlink-jp/util-series/voice-studio-mcp",
+            "/Users/magi/works/nlink-jp/_wip/voice-studio-mcp",
+            "/Users/magi/works/nlink-jp",
+            "claude-opus-4-8",
+        ]
+        let labels = AnalysisView.uniqueShortLabels(keys)
+        XCTAssertEqual(labels[keys[0]], "util-series/voice-studio-mcp")
+        XCTAssertEqual(labels[keys[1]], "_wip/voice-studio-mcp")
+        XCTAssertEqual(labels[keys[2]], "nlink-jp")   // unique basename ⇒ basename
+        XCTAssertEqual(labels[keys[3]], "claude-opus-4-8") // non-path passes through
+        // All labels are unique — no two bars collapse.
+        XCTAssertEqual(Set(labels.values).count, keys.count)
+    }
+
+    func testShortDay() {
+        XCTAssertEqual(AnalysisView.shortDay("2026-07-05"), "07-05")
+        XCTAssertEqual(AnalysisView.shortDay("unknown"), "unknown")
+        XCTAssertEqual(AnalysisView.shortDay("2026-W27"), "2026-W27")
+    }
+
+    func testCalendarSince() {
+        // 2026-07-05 (any time, UTC) with "7d" ⇒ start = today − 6 days = 2026-06-29.
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC")!
+        let now = cal.date(from: DateComponents(year: 2026, month: 7, day: 5, hour: 18))!
+        XCTAssertEqual(UsageModel.calendarSince("7d", from: now), "2026-06-29")
+        XCTAssertEqual(UsageModel.calendarSince("30d", from: now), "2026-06-06")
+        XCTAssertEqual(UsageModel.calendarSince("1d", from: now), "2026-07-05")
+        // Non-"Nd" periods pass through unchanged.
+        XCTAssertEqual(UsageModel.calendarSince("today", from: now), "today")
+        XCTAssertEqual(UsageModel.calendarSince("2026-07-01", from: now), "2026-07-01")
+    }
 }

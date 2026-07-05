@@ -73,11 +73,12 @@ enum CLIRunner {
         return try JSONDecoder().decode(Summary.self, from: data)
     }
 
-    static func rows(groupBy: String, since: String? = nil, sort: String? = nil, top: Int? = nil) throws -> [Row] {
+    static func rows(groupBy: String, since: String? = nil, sort: String? = nil, top: Int? = nil, dense: Bool = false) throws -> [Row] {
         var args = ["report", "--group-by", groupBy, "--json"]
         if let since { args += ["--since", since] }
         if let sort { args += ["--sort", sort] }
         if let top { args += ["--top", String(top)] }
+        if dense { args += ["--dense"] }
         return try JSONDecoder().decode([Row].self, from: try run(args))
     }
 }

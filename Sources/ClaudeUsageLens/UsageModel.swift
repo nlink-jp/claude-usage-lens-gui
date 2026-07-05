@@ -12,17 +12,41 @@ final class UsageModel: ObservableObject {
     // Analysis window state
     @Published var period: String = "7d"
     @Published var dailyRows: [Row] = []
+    @Published var dailyByModelRows: [Row] = [] // group-by day,model — for the stacked view
     @Published var modelRows: [Row] = []
     @Published var projectRows: [Row] = []
 
     private var timer: Timer?
     private let queue = DispatchQueue(label: "jp.nlink.claude-usage-lens-gui.cli", qos: .utility)
 
-    /// The compact text shown in the menu bar.
-    var menuBarLabel: String {
+    /// Today's cost as "$12.34" (menu-bar / popover).
+    var todayPrice: String {
         if let s = todaySummary { return String(format: "$%.2f", s.totalUSD) }
         if lastError != nil { return "—" }
         return "…"
+    }
+
+    /// Today's total token throughput (input + output + cache) as "277M".
+    var todayTokens: String {
+        guard let s = todaySummary else { return lastError != nil ? "—" : "…" }
+        return PopoverView.compact(s.inputTokens + s.outputTokens + s.cacheTokens)
+    }
+
+    /// Turn a "Nd" period into a UTC calendar start date (today − (N−1) days) as
+    /// YYYY-MM-DD, so a dense daily series spans exactly N calendar days aligned to
+    /// the CLI's UTC day buckets. Non-"Nd" periods pass through unchanged. `from`
+    /// is injectable for testing.
+    static func calendarSince(_ period: String, from now: Date = Date()) -> String {
+        guard period.hasSuffix("d"), let n = Int(period.dropLast()), n > 0 else { return period }
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "UTC") ?? .current
+        let start = cal.date(byAdding: .day, value: -(n - 1), to: cal.startOfDay(for: now)) ?? now
+        let f = DateFormatter()
+        f.calendar = cal
+        f.timeZone = cal.timeZone
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: start)
     }
 
     func start() {
@@ -56,11 +80,18 @@ final class UsageModel: ObservableObject {
         let period = self.period
         queue.async { [weak self] in
             do {
-                let daily = try CLIRunner.rows(groupBy: "day", since: period)
+                // Dense + a calendar-aligned start so the daily chart shows exactly
+                // N contiguous days (empty days as $0), matching the "N days" label.
+                let since = Self.calendarSince(period)
+                let daily = try CLIRunner.rows(groupBy: "day", since: since, dense: true)
+                // day,model composite for the stacked view (dense is single-dim only,
+                // so gaps just render as missing columns here).
+                let dailyByModel = try CLIRunner.rows(groupBy: "day,model", since: since)
                 let models = try CLIRunner.rows(groupBy: "model", since: period, sort: "cost")
                 let projects = try CLIRunner.rows(groupBy: "project", since: period, sort: "cost", top: 8)
                 DispatchQueue.main.async {
                     self?.dailyRows = daily
+                    self?.dailyByModelRows = dailyByModel
                     self?.modelRows = models
                     self?.projectRows = projects
                     self?.lastError = nil

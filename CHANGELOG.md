@@ -9,16 +9,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Project scaffold: SwiftPM app (macOS 14+, `LSUIElement` menu-bar agent),
   Makefile (`build` / `build-app` / `package` / `test`), Developer ID
   signing + notarization scripts (mirrors quick-translate), MIT license, docs.
-- Menu-bar item showing today's cost (live, timer-refreshed).
+- Menu-bar item showing today's usage, with a **configurable display**
+  (price `$12.34` / total tokens `277M` / two-line "both"), live + timer-refreshed.
+  Chosen in the popover, persisted via `@AppStorage`.
 - Popover: today's cost, input/output/cache tokens, 30-day projection.
-- Analysis window: daily cost trend, per-model and top-project charts
-  (Swift Charts), over a 7/30/90-day period.
+- Analysis window (Swift Charts), 7/30/90-day period, controls in the toolbar,
+  responsive layout:
+  - Daily trend — **contiguous series** (empty days as `$0`, via the CLI's
+    `--dense`), a **Cost / Tokens** metric toggle, **thinned** MM-DD x-labels on
+    long ranges, and a cursor-following **hover tooltip**.
+  - **By-model stacking** (optional) — each day split into per-model segments,
+    ordered by total (largest first), empty days preserved by joining onto the
+    dense day axis, with a per-day breakdown hover tooltip.
+  - Per-model and top-project bars — plotted by the full key so same-named
+    projects aren't collapsed/summed; labels disambiguated (`parent/name`).
 - `CLIRunner` — locate and invoke the `claude-usage-lens` CLI, decode its
-  `report --json` / `--summary --json` output (with a decode test).
+  `report --json` / `--summary --json` output (with decode tests).
 - `make build-app` embeds the CLI binary into the `.app` (self-contained).
 
 ### Notes
 - Native SwiftUI (not Wails, per the CLI's RFP) — a menu-bar-resident app is
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
+- Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
 [Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui

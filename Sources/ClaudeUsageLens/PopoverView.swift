@@ -6,6 +6,7 @@ import SwiftUI
 struct PopoverView: View {
     @EnvironmentObject var model: UsageModel
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("menuBarMode") private var menuBarMode: MenuBarMode = .price
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -45,6 +46,17 @@ struct PopoverView: View {
             }
 
             Divider()
+            HStack(spacing: 8) {
+                Text("Menu bar").font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Picker("", selection: $menuBarMode) {
+                    ForEach(MenuBarMode.allCases) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+            }
+
             HStack {
                 Button("Analysis…") {
                     model.loadAnalysis()

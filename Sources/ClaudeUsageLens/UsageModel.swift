@@ -35,18 +35,20 @@ final class UsageModel: ObservableObject {
         return PopoverView.compact(s.inputTokens + s.outputTokens + s.cacheTokens)
     }
 
-    /// Turn a "Nd" period into a UTC calendar start date (today − (N−1) days) as
-    /// YYYY-MM-DD, so a dense daily series spans exactly N calendar days aligned to
-    /// the CLI's UTC day buckets. Non-"Nd" periods pass through unchanged. `from`
-    /// is injectable for testing.
-    static func calendarSince(_ period: String, from now: Date = Date()) -> String {
+    /// Turn a "Nd" period into a calendar start date (today − (N−1) days) as
+    /// YYYY-MM-DD in `tz`, so a dense daily series spans exactly N calendar days
+    /// aligned to the CLI's day buckets. The app uses the local timezone (and
+    /// passes `--tz local` to the CLI) so "today" and day boundaries match the
+    /// user's local day. Non-"Nd" periods pass through unchanged. `from`/`tz` are
+    /// injectable for testing.
+    static func calendarSince(_ period: String, from now: Date = Date(), tz: TimeZone = .current) -> String {
         guard period.hasSuffix("d"), let n = Int(period.dropLast()), n > 0 else { return period }
         var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC") ?? .current
+        cal.timeZone = tz
         let start = cal.date(byAdding: .day, value: -(n - 1), to: cal.startOfDay(for: now)) ?? now
         let f = DateFormatter()
         f.calendar = cal
-        f.timeZone = cal.timeZone
+        f.timeZone = tz
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: start)

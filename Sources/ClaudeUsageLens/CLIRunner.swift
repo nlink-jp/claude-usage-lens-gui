@@ -138,12 +138,14 @@ enum CLIRunner {
     }
 
     static func summary(since: String) throws -> Summary {
-        let data = try run(["report", "--since", since, "--summary", "--json"])
+        // --tz local: day boundaries / "today" follow the user's local day (and
+        // match calendarSince, which computes in the local zone).
+        let data = try run(["report", "--since", since, "--summary", "--tz", "local", "--json"])
         return try JSONDecoder().decode(Summary.self, from: data)
     }
 
     static func rows(groupBy: String, since: String? = nil, sort: String? = nil, top: Int? = nil, dense: Bool = false) throws -> [Row] {
-        var args = ["report", "--group-by", groupBy, "--json"]
+        var args = ["report", "--group-by", groupBy, "--tz", "local", "--json"]
         if let since { args += ["--since", since] }
         if let sort { args += ["--sort", sort] }
         if let top { args += ["--top", String(top)] }

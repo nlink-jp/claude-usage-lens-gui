@@ -74,15 +74,27 @@ final class DecodeTests: XCTestCase {
     }
 
     func testCalendarSince() {
-        // 2026-07-05 (any time, UTC) with "7d" ⇒ start = today − 6 days = 2026-06-29.
+        // 2026-07-05 18:00 in UTC with "7d" ⇒ start = today − 6 days = 2026-06-29.
+        let utc = TimeZone(identifier: "UTC")!
         var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = TimeZone(identifier: "UTC")!
+        cal.timeZone = utc
         let now = cal.date(from: DateComponents(year: 2026, month: 7, day: 5, hour: 18))!
-        XCTAssertEqual(UsageModel.calendarSince("7d", from: now), "2026-06-29")
-        XCTAssertEqual(UsageModel.calendarSince("30d", from: now), "2026-06-06")
-        XCTAssertEqual(UsageModel.calendarSince("1d", from: now), "2026-07-05")
+        XCTAssertEqual(UsageModel.calendarSince("7d", from: now, tz: utc), "2026-06-29")
+        XCTAssertEqual(UsageModel.calendarSince("30d", from: now, tz: utc), "2026-06-06")
+        XCTAssertEqual(UsageModel.calendarSince("1d", from: now, tz: utc), "2026-07-05")
         // Non-"Nd" periods pass through unchanged.
-        XCTAssertEqual(UsageModel.calendarSince("today", from: now), "today")
-        XCTAssertEqual(UsageModel.calendarSince("2026-07-01", from: now), "2026-07-01")
+        XCTAssertEqual(UsageModel.calendarSince("today", from: now, tz: utc), "today")
+        XCTAssertEqual(UsageModel.calendarSince("2026-07-01", from: now, tz: utc), "2026-07-01")
+    }
+
+    func testCalendarSinceUsesGivenZone() {
+        // 2026-07-05 18:00 UTC == 2026-07-06 03:00 JST → "today" differs by zone.
+        let utc = TimeZone(identifier: "UTC")!
+        let jst = TimeZone(identifier: "Asia/Tokyo")!
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = utc
+        let now = cal.date(from: DateComponents(year: 2026, month: 7, day: 5, hour: 18))!
+        XCTAssertEqual(UsageModel.calendarSince("1d", from: now, tz: utc), "2026-07-05")
+        XCTAssertEqual(UsageModel.calendarSince("1d", from: now, tz: jst), "2026-07-06")
     }
 }

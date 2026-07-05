@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- Day boundaries / "today" now follow your **local timezone**. The app computes
+  its date windows locally and passes `--tz local` to the CLI, so "Today" and the
+  daily chart reset at your local midnight — not UTC. (Requires
+  `claude-usage-lens` with `--tz`.)
+
 ## [0.1.4] - 2026-07-05
 
 Bundles `claude-usage-lens` v0.2.2 (unchanged).

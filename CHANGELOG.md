@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- 30-day cost figures now reconcile. The analysis panel's **by-model** and
+  **top-projects** charts used a rolling `Nd` window while the daily chart used a
+  calendar-aligned N days, so their totals didn't match; all charts now share the
+  same calendar window (so by-model total == daily total). The popover's
+  "30-day projection" — which extrapolated from **today alone** (today × 30, e.g.
+  a wildly inflated figure) — is replaced by an actual **"Last 30 days"** total on
+  that same window, so the popover and the analysis panel agree.
+
 ## [0.1.3] - 2026-07-05
 
 Bundles `claude-usage-lens` v0.2.2 (unchanged).

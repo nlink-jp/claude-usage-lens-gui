@@ -27,9 +27,9 @@ struct PopoverView: View {
 
                 Divider()
                 HStack {
-                    Text("30-day projection").foregroundStyle(.secondary)
+                    Text("Last 30 days").foregroundStyle(.secondary)
                     Spacer()
-                    Text(String(format: "$%.0f", s.projection30USD)).monospacedDigit()
+                    Text(model.last30USD.map { String(format: "$%.2f", $0) } ?? "—").monospacedDigit()
                 }
                 .font(.callout)
             } else if let err = model.lastError {

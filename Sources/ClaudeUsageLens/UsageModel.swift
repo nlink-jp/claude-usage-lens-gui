@@ -6,6 +6,7 @@ import Foundation
 /// mutations are hopped back to main.
 final class UsageModel: ObservableObject {
     @Published var todaySummary: Summary?
+    @Published var last30USD: Double?       // actual last-30-days total (matches the analysis panel)
     @Published var lastError: String?       // short, user-facing summary
     @Published var lastErrorDetail: String? // raw CLI output, shown smaller
     @Published var lastUpdated: Date?
@@ -63,8 +64,12 @@ final class UsageModel: ObservableObject {
             do {
                 try CLIRunner.ingest()
                 let s = try CLIRunner.summary(since: "today")
+                // Actual last-30-days total, on the same calendar window the
+                // analysis panel uses, so the two reconcile.
+                let last30 = try CLIRunner.summary(since: Self.calendarSince("30d"))
                 DispatchQueue.main.async {
                     self?.todaySummary = s
+                    self?.last30USD = last30.totalUSD
                     self?.lastError = nil
                     self?.lastErrorDetail = nil
                     self?.lastUpdated = Date()
@@ -98,8 +103,11 @@ final class UsageModel: ObservableObject {
                 // day,model composite for the stacked view (dense is single-dim only,
                 // so gaps just render as missing columns here).
                 let dailyByModel = try CLIRunner.rows(groupBy: "day,model", since: since)
-                let models = try CLIRunner.rows(groupBy: "model", since: period, sort: "cost")
-                let projects = try CLIRunner.rows(groupBy: "project", since: period, sort: "cost", top: 8)
+                // Same `since` as the daily chart so every panel covers the identical
+                // period — otherwise the by-model total wouldn't match the daily total
+                // (calendar N days vs. a rolling Nd window differ at the boundary).
+                let models = try CLIRunner.rows(groupBy: "model", since: since, sort: "cost")
+                let projects = try CLIRunner.rows(groupBy: "project", since: since, sort: "cost", top: 8)
                 DispatchQueue.main.async {
                     self?.dailyRows = daily
                     self?.dailyByModelRows = dailyByModel

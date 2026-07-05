@@ -36,9 +36,11 @@ scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh (.app pipelin
 - **CLI is the data source.** Don't reimplement parsing/pricing in Swift — call
   the CLI. `Models.swift` must track the CLI's `--json` field names (snake_case
   via CodingKeys). If the CLI's report JSON changes, update these.
-- **Finding the CLI**: `$CLAUDE_USAGE_LENS_BIN` → bundled Resources → PATH/dev
-  paths (`CLIRunner.findBinary`). `make build-app` bundles it so the `.app` is
-  self-contained.
+- **Finding the CLI** (`CLIRunner.findBinary` → pure, tested `resolveBinary`):
+  bundled Resources first (signed/notarized = trust anchor), then `/usr/local/bin`,
+  `/opt/homebrew/bin`. The `$CLAUDE_USAGE_LENS_BIN` override and the local dev path
+  are `#if DEBUG`-only, so a release build can't be redirected by the env var
+  (issue #1). Keep `make build-app` bundling the CLI so the `.app` is self-contained.
 - **Live menu-bar label**: the App holds `UsageModel` as `@StateObject`, so a
   `@Published` change re-evaluates the `MenuBarExtra` label. The refresh timer is
   started once from `makeModel()`.

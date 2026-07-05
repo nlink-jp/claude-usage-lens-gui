@@ -24,10 +24,15 @@ is an API list-price-equivalent estimate. See the CLI's README.
 
 ## Requirements
 
-The `claude-usage-lens` CLI. The app finds it in this order:
-1. `$CLAUDE_USAGE_LENS_BIN`
-2. bundled inside the `.app` (Contents/Resources — `make build-app` embeds it)
-3. `/usr/local/bin`, `/opt/homebrew/bin`, or the sibling `claude-usage-lens/dist/`
+The `claude-usage-lens` CLI — **bundled inside the `.app`**, so a release build is
+self-contained. It's resolved in this order:
+1. the bundled copy in `Contents/Resources` (Developer-ID signed + notarized — the
+   trust anchor; `make build-app` embeds it)
+2. `/usr/local/bin`, `/opt/homebrew/bin` (fallback if not bundled)
+
+In **DEBUG builds only**, a `$CLAUDE_USAGE_LENS_BIN` override and the sibling
+`claude-usage-lens/dist/` dev path are also honored. Release builds ignore the
+env var so it can't redirect execution away from the signed bundle.
 
 ## Build
 

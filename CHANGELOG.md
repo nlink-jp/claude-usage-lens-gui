@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+- Harden CLI binary resolution ([#1](https://github.com/nlink-jp/claude-usage-lens-gui/issues/1)):
+  the bundled, Developer-ID signed + notarized binary is the trust anchor and is
+  resolved first. `$CLAUDE_USAGE_LENS_BIN` and the local dev path are now
+  `#if DEBUG`-only, so a release build can't be redirected to an arbitrary binary
+  by the environment; the hardcoded developer path no longer ships in release.
+  Resolution logic extracted to a pure, unit-tested `resolveBinary`.
+
 ### Added
 - Getting Started guide (`docs/en/getting-started.md`, `docs/ja/getting-started.ja.md`)
   — install, first run, keeping usage history complete (Login Items / CLI

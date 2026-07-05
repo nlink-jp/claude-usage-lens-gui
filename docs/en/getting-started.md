@@ -72,9 +72,9 @@ Nothing leaves your machine. Costs are notional (API list-price equivalent).
 ## Troubleshooting
 
 - **Menu bar shows `—`:** the CLI couldn't run or found no data. Make sure you've
-  actually used Claude Code / Cowork; open the popover to see the error. You can
-  force a specific CLI binary with the `CLAUDE_USAGE_LENS_BIN` environment
-  variable.
+  actually used Claude Code / Cowork; open the popover to see the error. The CLI
+  ships bundled inside the app — if it's somehow missing, reinstall the app or
+  install `claude-usage-lens` on your `PATH`.
 - **Two cost items in the menu bar:** a second copy is running — quit one
   (menu → **Quit**).
 - **You want the raw numbers or automation:** use the CLI directly, e.g.

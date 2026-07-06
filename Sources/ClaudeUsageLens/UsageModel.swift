@@ -51,31 +51,65 @@ final class UsageModel: ObservableObject {
 
     // MARK: - Weekly budget
 
-    /// Compute the weekly-budget status from settings + a CLI summary since the
-    /// last reset. Best-effort: returns nil when disabled or the CLI call fails.
+    /// Raw usage over the current weekly window, basis-independent. Cached so the
+    /// status can be rebuilt instantly when the limit/basis/thresholds change,
+    /// without another CLI call.
+    private struct WeeklyUsage { let cost: Double; let tokens: Double; let reset: Date; let nextReset: Date }
+    private var weeklyUsage: WeeklyUsage?
+
+    /// Query usage since the last reset. Best-effort (nil when disabled/CLI error).
     /// Runs on the background queue.
-    private func computeWeekly() -> WeeklyStatus? {
+    private func fetchWeeklyUsage() -> WeeklyUsage? {
         let s = WeeklySettings.current()
-        guard s.enabled, s.limit > 0 else { return nil }
+        guard s.enabled else { return nil }
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = .current
-        let now = Date()
-        let reset = WeeklyLimit.lastReset(weekday: s.weekday, hour: s.hour, minute: s.minute, now: now, calendar: cal)
+        let reset = WeeklyLimit.lastReset(weekday: s.weekday, hour: s.hour, minute: s.minute, now: Date(), calendar: cal)
         guard let summary = try? CLIRunner.summary(since: Self.datetimeString(reset)) else { return nil }
-        let used = s.basis == .cost ? summary.totalUSD : Double(summary.inputTokens + summary.outputTokens)
+        return WeeklyUsage(cost: summary.totalUSD, tokens: Double(summary.inputTokens + summary.outputTokens),
+                           reset: reset, nextReset: WeeklyLimit.nextReset(from: reset, calendar: cal))
+    }
+
+    /// Build the status from the cached usage + current settings — no CLI.
+    private func buildWeeklyStatus() -> WeeklyStatus? {
+        let s = WeeklySettings.current()
+        guard s.enabled, s.limit > 0, let u = weeklyUsage else { return nil }
+        let used = s.basis == .cost ? u.cost : u.tokens
         let percent = used / s.limit * 100
         let state = WeeklyLimit.state(percent: percent, warnPercent: s.warnPercent, criticalPercent: s.criticalPercent)
         return WeeklyStatus(basis: s.basis, used: used, limit: s.limit, state: state,
-                            resetStart: reset, nextReset: WeeklyLimit.nextReset(from: reset, calendar: cal))
+                            resetStart: u.reset, nextReset: u.nextReset)
     }
 
-    /// Apply a freshly computed weekly status and notify once when the severity
-    /// rises (normal→warning→critical). Must run on the main thread.
-    private func applyWeekly(_ w: WeeklyStatus?) {
+    /// Set the status, notifying once when severity rises — only `notify: true`
+    /// (the periodic refresh), never while the user tunes settings. Main thread.
+    private func applyWeekly(_ w: WeeklyStatus?, notify: Bool) {
         weeklyStatus = w
-        guard let w else { lastNotifiedRank = 0; return }
-        if w.state.rank > lastNotifiedRank { notifyWeekly(w) }
-        lastNotifiedRank = w.state.rank
+        let rank = w?.state.rank ?? 0
+        if notify, WeeklySettings.current().notificationsEnabled,
+           let w, rank > lastNotifiedRank {
+            notifyWeekly(w)
+        }
+        lastNotifiedRank = rank
+    }
+
+    /// Rebuild the status from cached usage instantly — for limit/basis/threshold
+    /// changes in Settings. No CLI call, no notification.
+    func applyWeeklySettings() {
+        applyWeekly(buildWeeklyStatus(), notify: false)
+    }
+
+    /// Re-query weekly usage for a new window (reset day/time or enable changed),
+    /// then rebuild. Background CLI call; no notification (user-initiated).
+    func refreshWeekly() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            let usage = self.fetchWeeklyUsage()
+            DispatchQueue.main.async {
+                self.weeklyUsage = usage
+                self.applyWeekly(self.buildWeeklyStatus(), notify: false)
+            }
+        }
     }
 
     /// Ask for notification permission (once). Call when the monitor is enabled.
@@ -139,7 +173,8 @@ final class UsageModel: ObservableObject {
 
     func start() {
         SettingsKey.registerDefaults()
-        if WeeklySettings.current().enabled { requestNotificationAuth() }
+        let s = WeeklySettings.current()
+        if s.enabled && s.notificationsEnabled { requestNotificationAuth() }
         refreshToday()
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             self?.refreshToday()
@@ -156,11 +191,12 @@ final class UsageModel: ObservableObject {
                 // Actual last-30-days total, on the same calendar window the
                 // analysis panel uses, so the two reconcile.
                 let last30 = try CLIRunner.summary(since: Self.calendarSince("30d"))
-                let weekly = self.computeWeekly() // best-effort; nil if off/error
+                let weeklyUsage = self.fetchWeeklyUsage() // best-effort; nil if off/error
                 DispatchQueue.main.async {
                     self.todaySummary = s
                     self.last30USD = last30.totalUSD
-                    self.applyWeekly(weekly)
+                    self.weeklyUsage = weeklyUsage
+                    self.applyWeekly(self.buildWeeklyStatus(), notify: true)
                     self.lastError = nil
                     self.lastErrorDetail = nil
                     self.lastUpdated = Date()

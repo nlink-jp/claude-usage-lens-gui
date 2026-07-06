@@ -13,9 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - the menu-bar number turns **orange (warning) / red (critical)**;
   - the popover shows a colored **This week: used / limit (%)** bar with the next
     reset; a new **"Weekly"** menu-bar display mode shows the remaining balance;
-  - a **notification** fires once when severity rises.
-  - Settings via ⌘, / "Settings…" in the popover. Requires `claude-usage-lens`
-    with datetime `--since` (v0.3.1+).
+  - a **notification** fires once when severity rises — or turn notifications off
+    (a "Show notifications" toggle) to keep the colour/bar only.
+  - Settings (⌘, / "Settings…") update the displayed status **live** as you type;
+    limit/basis/threshold changes recompute instantly with no CLI call. Requires
+    `claude-usage-lens` with datetime `--since` (v0.3.1+).
 
 ## [0.1.5] - 2026-07-05
 

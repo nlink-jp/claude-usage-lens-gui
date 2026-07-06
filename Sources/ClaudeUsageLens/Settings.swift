@@ -11,6 +11,7 @@ enum SettingsKey {
     static let resetMinute = "resetMinute"   // 0…59
     static let warnPercent = "warnPercent"
     static let criticalPercent = "criticalPercent"
+    static let notificationsEnabled = "weeklyNotificationsEnabled"
 
     static func registerDefaults(_ d: UserDefaults = .standard) {
         d.register(defaults: [
@@ -23,6 +24,7 @@ enum SettingsKey {
             resetMinute: 0,
             warnPercent: 80.0,
             criticalPercent: 95.0,
+            notificationsEnabled: true,
         ])
     }
 }
@@ -39,6 +41,7 @@ struct WeeklySettings {
     let minute: Int
     let warnPercent: Double
     let criticalPercent: Double
+    let notificationsEnabled: Bool
 
     static func current(_ d: UserDefaults = .standard) -> WeeklySettings {
         let basis = LimitBasis(rawValue: d.string(forKey: SettingsKey.limitBasis) ?? "cost") ?? .cost
@@ -51,7 +54,8 @@ struct WeeklySettings {
             hour: d.integer(forKey: SettingsKey.resetHour),
             minute: d.integer(forKey: SettingsKey.resetMinute),
             warnPercent: d.double(forKey: SettingsKey.warnPercent),
-            criticalPercent: d.double(forKey: SettingsKey.criticalPercent)
+            criticalPercent: d.double(forKey: SettingsKey.criticalPercent),
+            notificationsEnabled: d.bool(forKey: SettingsKey.notificationsEnabled)
         )
     }
 }

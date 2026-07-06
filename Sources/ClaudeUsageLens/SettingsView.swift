@@ -14,6 +14,7 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.resetMinute) private var resetMinute = 0
     @AppStorage(SettingsKey.warnPercent) private var warnPercent = 80.0
     @AppStorage(SettingsKey.criticalPercent) private var criticalPercent = 95.0
+    @AppStorage(SettingsKey.notificationsEnabled) private var notificationsEnabled = true
 
     private var basis: LimitBasis { LimitBasis(rawValue: basisRaw) ?? .cost }
 
@@ -22,12 +23,19 @@ struct SettingsView: View {
             Section {
                 Toggle("Monitor weekly budget", isOn: $enabled)
                     .onChange(of: enabled) { _, on in
-                        if on { model.requestNotificationAuth() }
-                        model.refreshToday()
+                        if on && notificationsEnabled { model.requestNotificationAuth() }
+                        model.refreshWeekly()
                     }
                 Text("A configurable budget — Claude's actual weekly limit can't be read, so set your own. Warns as you approach it.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                Toggle("Show notifications", isOn: $notificationsEnabled)
+                    .disabled(!enabled)
+                    .onChange(of: notificationsEnabled) { _, on in
+                        if on && enabled { model.requestNotificationAuth() }
+                    }
+                Text("Off = colour/bar only, no system notifications.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
 
             Section("Budget") {
@@ -68,7 +76,16 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 380)
         .fixedSize(horizontal: false, vertical: true)
-        .onDisappear { model.refreshToday() }
+        // Instant feedback: limit/basis/thresholds rebuild the status from cached
+        // usage (no CLI); reset day/time re-query the new window.
+        .onChange(of: basisRaw) { _, _ in model.applyWeeklySettings() }
+        .onChange(of: limitCost) { _, _ in model.applyWeeklySettings() }
+        .onChange(of: limitTokens) { _, _ in model.applyWeeklySettings() }
+        .onChange(of: warnPercent) { _, _ in model.applyWeeklySettings() }
+        .onChange(of: criticalPercent) { _, _ in model.applyWeeklySettings() }
+        .onChange(of: resetWeekday) { _, _ in model.refreshWeekly() }
+        .onChange(of: resetHour) { _, _ in model.refreshWeekly() }
+        .onChange(of: resetMinute) { _, _ in model.refreshWeekly() }
     }
 
     /// A Date binding over just the hour/minute settings for the time picker.

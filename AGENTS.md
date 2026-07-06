@@ -21,14 +21,21 @@ make test       # swift test
 
 ```
 Sources/ClaudeUsageLens/
-  App.swift         @main; MenuBarExtra(.window) live label + Window("analysis")
-  UsageModel.swift  ObservableObject; timer → ingest + summary; loadAnalysis()
+  App.swift         @main; MenuBarExtra live label (tinted by weekly state) +
+                    Window("analysis") + Window("settings")
+  UsageModel.swift  ObservableObject; timer → ingest + summary; loadAnalysis();
+                    weekly-budget compute + notifications
   CLIRunner.swift   locate + run the CLI, decode JSON
   Models.swift      Codable Summary / Row (match the CLI's report JSON)
-  PopoverView.swift today's cost + tokens + projection
-  AnalysisView.swift Swift Charts: daily / model / project
+  MenuBarMode.swift menu-bar display mode (price/tokens/both/weekly)
+  WeeklyLimit.swift pure lastReset/state helpers + LimitBasis/LimitState/WeeklyStatus
+  Settings.swift    UserDefaults keys/defaults + WeeklySettings snapshot
+  PopoverView.swift today's cost + tokens + last-30 + weekly bar
+  AnalysisView.swift Swift Charts: period total + daily / model / project
+  SettingsView.swift weekly-budget Form (shown in the settings Window)
 Info.plist          LSUIElement=true (menu-bar agent, no dock icon)
-scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh (.app pipeline)
+scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh, make-icns.sh
+assets/             AppIcon-1024.png (→ AppIcon.icns at build)
 ```
 
 ## Gotchas / conventions
@@ -50,6 +57,17 @@ scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh (.app pipelin
   `CLIError.summarize` (crash / permission / missing path / first stderr line);
   `UsageModel` exposes `lastError` (summary) + `lastErrorDetail` (raw), and the
   popover shows the summary with the raw output as smaller, selectable detail.
+- **Weekly monitor**: settings live in UserDefaults (`Settings.swift` keys +
+  `WeeklySettings` snapshot; `SettingsView` binds the same keys via @AppStorage).
+  `UsageModel` caches the raw weekly usage (cost + in+out tokens) so limit / basis
+  / threshold changes rebuild the status **instantly with no CLI call**
+  (`applyWeeklySettings`); only reset day/time re-queries (`refreshWeekly`, using
+  the CLI's datetime `--since`). Notifications fire only from the periodic refresh
+  on an upward severity crossing, gated by the "Show notifications" setting — never
+  while tuning settings.
+- **Settings/analysis windows, not the Settings scene**: a menu-bar (LSUIElement)
+  app can't reliably focus the `Settings` scene / `SettingsLink`, so both open as
+  plain `Window`s via `openWindow(id:)` + `NSApp.activate(ignoringOtherApps:)`.
 - **Signing**: `--deep` signs the bundled CLI too. Pure SwiftUI/AppKit needs no
   entitlements (Hardened Runtime alone). Notarize + staple the `.app`.
 - **Native, not Wails**: deliberate deviation from the CLI's RFP — a menu-bar

@@ -14,13 +14,22 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
 ## What it does
 
 - **Menu bar**: live "today's cost" (e.g. `$12.34`), refreshed on a timer.
+  Display is configurable (price / tokens / two-line / weekly-remaining).
 - **Popover** (click the menu bar item): today's cost, input/output/cache tokens,
-  and a 30-day projection.
-- **Analysis window**: daily cost trend, per-model and top-project breakdowns
-  (Swift Charts), over a selectable 7/30/90-day period.
+  the last-30-days total, and the weekly-budget bar (when enabled).
+- **Analysis window**: period total plus daily trend, per-model and top-project
+  breakdowns (Swift Charts), over a selectable 7/30/90-day period, with hover
+  detail and optional per-model stacking.
+- **Weekly budget monitor** (optional): set your own weekly budget — Claude's
+  actual weekly limit isn't readable — by **cost ($)** or **tokens (in+out)**,
+  with a configurable local **reset weekday/time** and **two-tier** warning /
+  critical thresholds. As you approach it the menu-bar number turns orange/red,
+  the popover shows a colored used/limit bar, and (optionally) a **notification**
+  fires. Settings via ⌘, / "Settings…" in the popover.
 
 Costs follow the CLI's model: Cowork is exact (from its audit log), Claude Code
-is an API list-price-equivalent estimate. See the CLI's README.
+is an API list-price-equivalent estimate. All dates use your local timezone.
+See the CLI's README.
 
 ## Requirements
 

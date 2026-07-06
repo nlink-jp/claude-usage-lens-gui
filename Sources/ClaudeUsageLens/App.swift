@@ -25,10 +25,14 @@ struct ClaudeUsageLensApp: App {
         }
         .windowResizability(.contentMinSize)
 
-        Settings {
+        // A plain Window (not the Settings scene): a menu-bar (LSUIElement) app
+        // can open + focus it reliably via openWindow + NSApp.activate, whereas the
+        // Settings scene / SettingsLink often opens unfocused or not at all.
+        Window("Weekly Budget", id: "settings") {
             SettingsView()
                 .environmentObject(model)
         }
+        .windowResizability(.contentSize)
     }
 
     /// Menu-bar content per the chosen display mode, tinted by the weekly-budget

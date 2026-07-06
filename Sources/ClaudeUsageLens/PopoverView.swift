@@ -60,15 +60,13 @@ struct PopoverView: View {
             }
 
             Divider()
-            HStack(spacing: 8) {
-                Text("Menu bar").font(.callout).foregroundStyle(.secondary)
-                Spacer()
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Menu bar").font(.caption).foregroundStyle(.secondary)
                 Picker("", selection: $menuBarMode) {
                     ForEach(MenuBarMode.allCases) { Text($0.label).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                .fixedSize()
             }
 
             HStack {
@@ -77,7 +75,10 @@ struct PopoverView: View {
                     openWindow(id: "analysis")
                     NSApp.activate(ignoringOtherApps: true)
                 }
-                SettingsLink { Text("Settings…") }
+                Button("Settings…") {
+                    openWindow(id: "settings")
+                    NSApp.activate(ignoringOtherApps: true)
+                }
                 Spacer()
                 Button("Refresh") { model.refreshToday() }
                 Button("Quit") { NSApp.terminate(nil) }

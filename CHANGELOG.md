@@ -5,6 +5,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- **Weekly budget monitor.** Set your own weekly budget (Claude's real weekly
+  limit isn't readable), by **Cost ($)** or **Tokens (in+out)**, with a
+  configurable **reset weekday/time** (local) and **two-tier** warning/critical
+  thresholds. As you approach it:
+  - the menu-bar number turns **orange (warning) / red (critical)**;
+  - the popover shows a colored **This week: used / limit (%)** bar with the next
+    reset; a new **"Weekly"** menu-bar display mode shows the remaining balance;
+  - a **notification** fires once when severity rises.
+  - Settings via ⌘, / "Settings…" in the popover. Requires `claude-usage-lens`
+    with datetime `--since` (v0.3.1+).
+
 ## [0.1.5] - 2026-07-05
 
 Bundles `claude-usage-lens` **v0.3.0** (local-timezone day boundaries).

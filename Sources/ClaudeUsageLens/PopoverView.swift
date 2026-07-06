@@ -49,6 +49,11 @@ struct PopoverView: View {
                 HStack { Spacer(); ProgressView(); Spacer() }.frame(height: 60)
             }
 
+            if let w = model.weeklyStatus {
+                Divider()
+                weeklySection(w)
+            }
+
             if let ts = model.lastUpdated {
                 Text("Updated \(ts.formatted(date: .omitted, time: .shortened))")
                     .font(.caption2).foregroundStyle(.tertiary)
@@ -72,13 +77,36 @@ struct PopoverView: View {
                     openWindow(id: "analysis")
                     NSApp.activate(ignoringOtherApps: true)
                 }
+                SettingsLink { Text("Settings…") }
                 Spacer()
                 Button("Refresh") { model.refreshToday() }
                 Button("Quit") { NSApp.terminate(nil) }
             }
+            .controlSize(.small)
         }
         .padding(14)
-        .frame(width: 288)
+        .frame(width: 300)
+    }
+
+    /// Weekly-budget progress: used / limit, a colored bar, %, and the next reset.
+    @ViewBuilder
+    private func weeklySection(_ w: WeeklyStatus) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text("This week").font(.callout).foregroundStyle(.secondary)
+                Spacer()
+                Text("\(UsageModel.amount(w.used, w.basis)) / \(UsageModel.amount(w.limit, w.basis))")
+                    .font(.callout).monospacedDigit()
+                    .foregroundStyle(w.state.color ?? .primary)
+            }
+            ProgressView(value: min(w.percent, 100), total: 100)
+                .tint(w.state.color ?? .accentColor)
+            HStack {
+                Text("\(Int(w.percent))% used").font(.caption2).foregroundStyle(.secondary)
+                Spacer()
+                Text("resets \(UsageModel.resetLabel(w.nextReset))").font(.caption2).foregroundStyle(.tertiary)
+            }
+        }
     }
 
     private func tokenRow(_ label: String, _ n: Int) -> some View {

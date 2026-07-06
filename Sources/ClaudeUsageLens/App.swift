@@ -12,7 +12,8 @@ struct ClaudeUsageLensApp: App {
                 .environmentObject(model)
         } label: {
             // The App holds `model` as a @StateObject and reads `menuBarMode`
-            // via @AppStorage, so a change to either re-evaluates this label live.
+            // via @AppStorage, so a change to either (incl. the weekly state)
+            // re-evaluates this label live.
             menuBarLabel
         }
         .menuBarExtraStyle(.window)
@@ -23,19 +24,43 @@ struct ClaudeUsageLensApp: App {
                 .frame(minWidth: 620, minHeight: 460)
         }
         .windowResizability(.contentMinSize)
+
+        Settings {
+            SettingsView()
+                .environmentObject(model)
+        }
     }
 
-    /// Menu-bar content per the chosen display mode. "both" renders two rows via
-    /// an NSImage (a template image so it adapts to the light/dark menu bar).
+    /// Menu-bar content per the chosen display mode, tinted by the weekly-budget
+    /// state (orange = warning, red = critical) so a low balance is visible
+    /// regardless of what the label shows.
     @ViewBuilder
     private var menuBarLabel: some View {
+        let state = model.weeklyStatus?.state ?? .normal
         switch menuBarMode {
         case .price:
-            Text(model.todayPrice)
+            colored(Text(model.todayPrice), state.color)
         case .tokens:
-            Text(model.todayTokens)
+            colored(Text(model.todayTokens), state.color)
+        case .weekly:
+            colored(Text(model.weeklyRemainingLabel), state.color)
         case .both:
-            Image(nsImage: Self.twoLineImage(top: model.todayPrice, bottom: model.todayTokens))
+            Image(nsImage: Self.twoLineImage(
+                top: model.todayPrice, bottom: model.todayTokens,
+                color: Self.menuNSColor(state)))
+        }
+    }
+
+    @ViewBuilder
+    private func colored(_ text: Text, _ color: Color?) -> some View {
+        if let color { text.foregroundStyle(color) } else { text }
+    }
+
+    private static func menuNSColor(_ state: LimitState) -> NSColor? {
+        switch state {
+        case .normal: return nil
+        case .warning: return .systemOrange
+        case .critical: return .systemRed
         }
     }
 
@@ -46,11 +71,13 @@ struct ClaudeUsageLensApp: App {
         return m
     }
 
-    /// Render two stacked, right-aligned lines to a template NSImage sized to fit
-    /// the menu bar. Both lines use the same point size so the tokens line stays
-    /// legible; the price is emphasised by weight, not size. Template ⇒ the system
-    /// tints it for light/dark automatically.
-    static func twoLineImage(top: String, bottom: String) -> NSImage {
+    /// Render two stacked, right-aligned lines to an NSImage sized to fit the menu
+    /// bar. With no color it's a template image (auto-tints for light/dark); with a
+    /// color (weekly warning/critical) it's rendered in that tint. Both lines use
+    /// the same point size so the tokens line stays legible; the price is
+    /// emphasised by weight, not size.
+    static func twoLineImage(top: String, bottom: String, color: NSColor? = nil) -> NSImage {
+        let fg = color ?? .black
         let topFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
         let botFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .regular)
 
@@ -68,10 +95,10 @@ struct ClaudeUsageLensApp: App {
 
         let s = NSMutableAttributedString()
         s.append(NSAttributedString(string: top + "\n", attributes: [
-            .font: topFont, .paragraphStyle: topPara, .foregroundColor: NSColor.black,
+            .font: topFont, .paragraphStyle: topPara, .foregroundColor: fg,
         ]))
         s.append(NSAttributedString(string: bottom, attributes: [
-            .font: botFont, .paragraphStyle: botPara, .foregroundColor: NSColor.black,
+            .font: botFont, .paragraphStyle: botPara, .foregroundColor: fg,
         ]))
 
         let bounds = s.size()
@@ -83,7 +110,7 @@ struct ClaudeUsageLensApp: App {
         // Draw into the lower `textH`, leaving `topMargin` empty above the top row.
         s.draw(in: NSRect(x: 0, y: 0, width: size.width, height: textH))
         img.unlockFocus()
-        img.isTemplate = true
+        img.isTemplate = (color == nil)
         return img
     }
 }

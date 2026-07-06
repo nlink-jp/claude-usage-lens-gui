@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-07-06
+
+Bundles `claude-usage-lens` **v0.3.1** (datetime `--since`).
+
 ### Added
 - **Weekly budget monitor.** Set your own weekly budget (Claude's real weekly
   limit isn't readable), by **Cost ($)** or **Tokens (in+out)**, with a
@@ -115,7 +119,8 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.6
 [0.1.5]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.5
 [0.1.4]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.4
 [0.1.3]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.3

@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-07-09
+
+### Fixed
+- The weekly-budget value (and today's numbers) could freeze — e.g. stuck at `$0`
+  after a reset — because macOS **App Nap** throttled the background menu-bar app's
+  refresh timer. The app now opts out of App Nap so the 60s timer keeps firing (the
+  menu-bar colour and weekly value stay live; system sleep is still allowed), and
+  the popover **refreshes whenever it's opened**.
+
 ## [0.1.6] - 2026-07-06
 
 Bundles `claude-usage-lens` **v0.3.1** (datetime `--since`).
@@ -119,7 +128,8 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.7
 [0.1.6]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.6
 [0.1.5]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.5
 [0.1.4]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.4

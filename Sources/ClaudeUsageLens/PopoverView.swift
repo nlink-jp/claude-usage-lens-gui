@@ -87,6 +87,9 @@ struct PopoverView: View {
         }
         .padding(14)
         .frame(width: 300)
+        // Always show fresh numbers when the popover is opened, even if the timer
+        // was throttled while the app sat idle in the menu bar.
+        .onAppear { model.refreshToday() }
     }
 
     /// Weekly-budget progress: used / limit, a colored bar, %, and the next reset.

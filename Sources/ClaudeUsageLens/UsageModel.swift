@@ -24,6 +24,7 @@ final class UsageModel: ObservableObject {
     @Published var projectRows: [Row] = []
 
     private var timer: Timer?
+    private var activity: NSObjectProtocol?  // App Nap opt-out (retain for the app's lifetime)
     private let queue = DispatchQueue(label: "jp.nlink.claude-usage-lens-gui.cli", qos: .utility)
 
     /// Today's cost as "$12.34" (menu-bar / popover).
@@ -173,6 +174,11 @@ final class UsageModel: ObservableObject {
 
     func start() {
         SettingsKey.registerDefaults()
+        // Opt out of App Nap so the 60s refresh timer keeps firing while the app
+        // sits in the menu bar (otherwise the menu-bar color / weekly value freeze
+        // when macOS naps this windowless background app). System sleep is allowed.
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiatedAllowingIdleSystemSleep], reason: "usage monitoring")
         let s = WeeklySettings.current()
         if s.enabled && s.notificationsEnabled { requestNotificationAuth() }
         refreshToday()

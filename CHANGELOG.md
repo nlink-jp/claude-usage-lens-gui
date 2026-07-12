@@ -3,7 +3,17 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.1.8] - 2026-07-12
+
+### Changed
+
+- **Release archive renamed** to `claude-usage-lens-gui-<version>-darwin-arm64.zip`
+  (was `ClaudeUsageLens-<version>-macos-arm64.zip`), per `nlink-jp/.github`
+  CONVENTIONS.md §Release Archive Standard. The `.app` inside is still
+  `ClaudeUsageLens.app`.
+- Bundles `claude-usage-lens` **v0.4.0**.
+
+Packaging-only release; no change to the app's behaviour.
 
 ## [0.1.7] - 2026-07-09
 

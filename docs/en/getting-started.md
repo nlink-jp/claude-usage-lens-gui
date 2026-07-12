@@ -16,7 +16,7 @@ not an actual bill.
 
 ## Install
 
-1. Download `ClaudeUsageLens-vX.Y.Z-macos-arm64.zip` from the
+1. Download `claude-usage-lens-gui-vX.Y.Z-darwin-arm64.zip` from the
    [latest release](https://github.com/nlink-jp/claude-usage-lens-gui/releases/latest).
 2. Unzip it and move **`ClaudeUsageLens.app`** to `/Applications`.
 3. Double-click to open. The app is Developer ID signed **and notarized**, so it

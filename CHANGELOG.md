@@ -3,6 +3,27 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.9] - 2026-07-26
+
+### Fixed
+
+- **Claude Opus 5 usage showed as $0**, understating every figure in the app —
+  today's cost, the weekly budget, the charts, and the analysis totals. The cause
+  was in the bundled CLI, whose rate table predated the model: an unpriced model
+  is costed as free by design, so Opus 5 turns contributed nothing. Because the
+  app ingests on a timer, it was also *adding* $0 rows to the shared store every
+  minute.
+
+  Bundles `claude-usage-lens` **v0.5.0**, which prices Opus 5 (and fast mode)
+  correctly and adds a `reprice` command.
+
+  **After updating, run `claude-usage-lens reprice` once** to correct the records
+  already in your store — the app's numbers come from that store, and existing
+  rows keep their original (zero) cost until repriced. The bundled binary is at
+  `/Applications/ClaudeUsageLens.app/Contents/Resources/claude-usage-lens`.
+
+App behaviour is otherwise unchanged.
+
 ## [0.1.8] - 2026-07-12
 
 ### Changed
@@ -138,7 +159,9 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.9...HEAD
+[0.1.9]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.8...v0.1.9
+[0.1.8]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.7
 [0.1.6]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.6
 [0.1.5]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.5

@@ -54,32 +54,86 @@ final class UsageModel: ObservableObject {
 
     /// Raw usage over the current weekly window, basis-independent. Cached so the
     /// status can be rebuilt instantly when the limit/basis/thresholds change,
-    /// without another CLI call.
-    private struct WeeklyUsage { let cost: Double; let tokens: Double; let reset: Date; let nextReset: Date }
+    /// without another CLI call. When the CLI holds a usable calibration
+    /// (ADR-0001), the derived caps ride along and take precedence over the
+    /// user's assumed budget.
+    private struct WeeklyUsage {
+        let cost: Double
+        let tokens: Double
+        let reset: Date
+        let nextReset: Date
+        let capCost: Double?          // calibrated cap (nil = not calibrated)
+        let capTokens: Double?
+        let calibrationAgeDays: Double?
+    }
     private var weeklyUsage: WeeklyUsage?
 
-    /// Query usage since the last reset. Best-effort (nil when disabled/CLI error).
-    /// Runs on the background queue.
+    /// Query usage for the current weekly window. Best-effort (nil when
+    /// disabled/CLI error). Prefers the CLI's calibrated view — its window
+    /// cadence comes from the official reset instant — and falls back to the
+    /// settings-defined window with the assumed budget. Runs on the background
+    /// queue.
     private func fetchWeeklyUsage() -> WeeklyUsage? {
         let s = WeeklySettings.current()
         guard s.enabled else { return nil }
+        if let p = try? CLIRunner.limits(), p.calibrated, let st = p.status {
+            return WeeklyUsage(
+                cost: st.consumed.costUSD, tokens: Double(st.consumed.tokens),
+                reset: st.windowStart, nextReset: st.windowEnd,
+                capCost: st.caps.costUSD, capTokens: Double(st.caps.tokens),
+                calibrationAgeDays: st.calibration.ageDays)
+        }
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = .current
         let reset = WeeklyLimit.lastReset(weekday: s.weekday, hour: s.hour, minute: s.minute, now: Date(), calendar: cal)
         guard let summary = try? CLIRunner.summary(since: Self.datetimeString(reset)) else { return nil }
         return WeeklyUsage(cost: summary.totalUSD, tokens: Double(summary.inputTokens + summary.outputTokens),
-                           reset: reset, nextReset: WeeklyLimit.nextReset(from: reset, calendar: cal))
+                           reset: reset, nextReset: WeeklyLimit.nextReset(from: reset, calendar: cal),
+                           capCost: nil, capTokens: nil, calibrationAgeDays: nil)
     }
 
-    /// Build the status from the cached usage + current settings — no CLI.
+    /// Build the status from the cached usage + current settings — no CLI. A
+    /// calibrated cap wins over the assumed budget on whichever basis is shown.
     private func buildWeeklyStatus() -> WeeklyStatus? {
         let s = WeeklySettings.current()
-        guard s.enabled, s.limit > 0, let u = weeklyUsage else { return nil }
+        guard s.enabled, let u = weeklyUsage else { return nil }
+        let calibratedLimit = s.basis == .cost ? u.capCost : u.capTokens
+        let limit = calibratedLimit ?? s.limit
+        guard limit > 0 else { return nil }
         let used = s.basis == .cost ? u.cost : u.tokens
-        let percent = used / s.limit * 100
+        let percent = used / limit * 100
         let state = WeeklyLimit.state(percent: percent, warnPercent: s.warnPercent, criticalPercent: s.criticalPercent)
-        return WeeklyStatus(basis: s.basis, used: used, limit: s.limit, state: state,
-                            resetStart: u.reset, nextReset: u.nextReset)
+        return WeeklyStatus(basis: s.basis, used: used, limit: limit, state: state,
+                            resetStart: u.reset, nextReset: u.nextReset,
+                            calibrated: calibratedLimit != nil,
+                            calibrationAgeDays: u.calibrationAgeDays)
+    }
+
+    // MARK: - Calibration (ADR-0001)
+
+    /// Feedback line for the Settings calibration section (success or failure).
+    @Published var calibrationMessage: String?
+
+    /// Record an official /usage reading via the CLI, then refresh the weekly
+    /// status so the derived cap applies immediately.
+    func calibrate(utilizationPct: Double, resetsAt: Date) {
+        queue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let res = try CLIRunner.calibrateAdd(utilizationPct: utilizationPct, resetsAt: resetsAt)
+                let usage = self.fetchWeeklyUsage()
+                DispatchQueue.main.async {
+                    self.weeklyUsage = usage
+                    self.applyWeekly(self.buildWeeklyStatus(), notify: false)
+                    self.calibrationMessage = String(
+                        format: "Calibrated — weekly cap ≈ $%.2f / %@ tokens",
+                        res.caps.costUSD, PopoverView.compact(res.caps.tokens))
+                }
+            } catch {
+                let msg = (error as? LocalizedError)?.errorDescription ?? "\(error)"
+                DispatchQueue.main.async { self.calibrationMessage = msg }
+            }
+        }
     }
 
     /// Set the status, notifying once when severity rises — only `notify: true`

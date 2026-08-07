@@ -16,6 +16,9 @@ struct SettingsView: View {
     @AppStorage(SettingsKey.criticalPercent) private var criticalPercent = 95.0
     @AppStorage(SettingsKey.notificationsEnabled) private var notificationsEnabled = true
 
+    @State private var calibUtilization: Double = 0
+    @State private var calibResetsAt = Date()
+
     private var basis: LimitBasis { LimitBasis(rawValue: basisRaw) ?? .cost }
 
     var body: some View {
@@ -26,7 +29,7 @@ struct SettingsView: View {
                         if on && notificationsEnabled { model.requestNotificationAuth() }
                         model.refreshWeekly()
                     }
-                Text("A configurable budget — Claude's actual weekly limit can't be read, so set your own. Warns as you approach it.")
+                Text("Warns as you approach the weekly limit. Calibrate below to anchor it to the official /usage reading; otherwise your assumed budget is used.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Toggle("Show notifications", isOn: $notificationsEnabled)
@@ -38,7 +41,32 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
 
-            Section("Budget") {
+            Section("Calibration") {
+                TextField("Official /usage shows (%)", value: $calibUtilization, format: .number)
+                DatePicker("Resets at", selection: $calibResetsAt)
+                Button("Calibrate") {
+                    model.calibrationMessage = nil
+                    model.calibrate(utilizationPct: calibUtilization, resetsAt: calibResetsAt)
+                }
+                .disabled(calibUtilization <= 0 || calibUtilization > 100)
+                Text("Run /usage in Claude Code, then enter the weekly percentage and its reset time. The real cap is derived from it — no private API involved.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let msg = model.calibrationMessage {
+                    Text(msg)
+                        .font(.caption)
+                        .foregroundStyle(msg.hasPrefix("Calibrated") ? Color.green : Color.orange)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                }
+                if let w = model.weeklyStatus, w.calibrated {
+                    LabeledContent("Active cap",
+                        value: "\(UsageModel.amount(w.limit, w.basis)) (calibrated \(Self.ageLabel(w.calibrationAgeDays)))")
+                }
+            }
+            .disabled(!enabled)
+
+            Section("Assumed budget (fallback)") {
                 Picker("Measure by", selection: $basisRaw) {
                     ForEach(LimitBasis.allCases) { Text($0.label).tag($0.rawValue) }
                 }
@@ -47,6 +75,8 @@ struct SettingsView: View {
                 } else {
                     TextField("Weekly limit (tokens, in+out)", value: $limitTokens, format: .number)
                 }
+                Text("Used only while no calibration is recorded.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             .disabled(!enabled)
 
@@ -55,8 +85,9 @@ struct SettingsView: View {
                     ForEach(1...7, id: \.self) { Text(Self.weekdayName($0)).tag($0) }
                 }
                 DatePicker("Reset time", selection: resetTime, displayedComponents: .hourAndMinute)
-                Text("Weekly window starts at this local day/time.")
+                Text("Weekly window starts at this local day/time. When calibrated, the official reset cadence takes over.")
                     .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .disabled(!enabled)
 
@@ -86,6 +117,15 @@ struct SettingsView: View {
         .onChange(of: resetWeekday) { _, _ in model.refreshWeekly() }
         .onChange(of: resetHour) { _, _ in model.refreshWeekly() }
         .onChange(of: resetMinute) { _, _ in model.refreshWeekly() }
+        // Prefill the calibration reset picker with the best-known next reset.
+        .onAppear { calibResetsAt = model.weeklyStatus?.nextReset ?? Date() }
+    }
+
+    /// "0.3 days ago" → a compact staleness label for the active cap.
+    static func ageLabel(_ days: Double?) -> String {
+        guard let days else { return "just now" }
+        if days < 1 { return "today" }
+        return String(format: "%.0fd ago", days)
     }
 
     /// A Date binding over just the hour/minute settings for the time picker.

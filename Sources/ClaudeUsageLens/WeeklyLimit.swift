@@ -39,6 +39,11 @@ struct WeeklyStatus: Equatable {
     let state: LimitState
     let resetStart: Date  // the reset instant the current window began at
     let nextReset: Date
+    /// True when `limit` is the cap derived from an official /usage reading
+    /// (CLI `limits`), false when it is the user's assumed budget.
+    let calibrated: Bool
+    /// Days since the calibration reading (calibrated only) — staleness hint.
+    let calibrationAgeDays: Double?
 
     var percent: Double { limit > 0 ? used / limit * 100 : 0 }
     var remaining: Double { max(0, limit - used) }
@@ -46,6 +51,7 @@ struct WeeklyStatus: Equatable {
     static func == (a: WeeklyStatus, b: WeeklyStatus) -> Bool {
         a.basis == b.basis && a.used == b.used && a.limit == b.limit
             && a.state.rank == b.state.rank && a.resetStart == b.resetStart
+            && a.calibrated == b.calibrated
     }
 }
 

@@ -98,6 +98,11 @@ struct PopoverView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("This week").font(.callout).foregroundStyle(.secondary)
+                Text(w.calibrated ? "calibrated" : "assumed")
+                    .font(.caption2)
+                    .padding(.horizontal, 5).padding(.vertical, 1)
+                    .background(Capsule().fill(w.calibrated ? Color.green.opacity(0.15) : Color.secondary.opacity(0.15)))
+                    .foregroundStyle(w.calibrated ? .green : .secondary)
                 Spacer()
                 Text("\(UsageModel.amount(w.used, w.basis)) / \(UsageModel.amount(w.limit, w.basis))")
                     .font(.callout).monospacedDigit()

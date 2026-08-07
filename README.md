@@ -20,12 +20,20 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
 - **Analysis window**: period total plus daily trend, per-model and top-project
   breakdowns (Swift Charts), over a selectable 7/30/90-day period, with hover
   detail and optional per-model stacking.
-- **Weekly budget monitor** (optional): set your own weekly budget — Claude's
-  actual weekly limit isn't readable — by **cost ($)** or **tokens (in+out)**,
-  with a configurable local **reset weekday/time** and **two-tier** warning /
-  critical thresholds. As you approach it the menu-bar number turns orange/red,
-  the popover shows a colored used/limit bar, and (optionally) a **notification**
-  fires. Settings via ⌘, / "Settings…" in the popover.
+- **Weekly budget monitor** (optional): tracks the week's usage by **cost ($)**
+  or **tokens (in+out)** with **two-tier** warning / critical thresholds. As you
+  approach the limit the menu-bar number turns orange/red, the popover shows a
+  colored used/limit bar, and (optionally) a **notification** fires. Settings
+  via ⌘, / "Settings…" in the popover.
+- **Calibrated to the real limit** (optional): Claude's actual quota lives
+  server-side and can't be read from logs, but you can **calibrate**: run
+  `/usage` in Claude Code, type the official weekly percentage and its reset
+  time into Settings → Calibration, and the app derives the **real effective
+  cap** (via the CLI's `calibrate`/`limits` — no private API involved). The
+  weekly bar then shows a green **calibrated** badge and follows the official
+  reset cadence; without a calibration it falls back to your **assumed** budget
+  (with a matching badge). Re-calibrate occasionally — anytime the official
+  percentage drifts from the app's estimate, or after plan/promo changes.
 
 Costs follow the CLI's model: Cowork is exact (from its audit log), Claude Code
 is an API list-price-equivalent estimate. All dates use your local timezone.

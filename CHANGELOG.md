@@ -3,6 +3,27 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] - 2026-08-08
+
+### Added
+
+- **Weekly budget calibrated to the real limit** (with CLI v0.6.0, its
+  ADR-0001). Claude's actual quota can't be read from logs and the private
+  OAuth usage endpoint is deliberately not used; instead, Settings gains a
+  **Calibration** section: run `/usage` in Claude Code, enter the official
+  weekly percentage and its reset time, and the app derives the real effective
+  cap via the CLI (`calibrate add` / `limits --json`).
+  - While calibrated, the weekly bar carries a green **calibrated** badge, the
+    cap follows the official reset cadence, and Settings shows the active cap
+    with its age. Warning/critical thresholds and notifications work unchanged
+    on top.
+  - With no (usable) calibration the monitor falls back to your assumed budget,
+    now badged **assumed** — behaviour otherwise identical to v0.1.x.
+  - Re-calibrate whenever the official percentage drifts from the app's
+    estimate, and after plan/promotion changes.
+
+Bundles `claude-usage-lens` **v0.6.0**.
+
 ## [0.1.9] - 2026-07-26
 
 ### Fixed

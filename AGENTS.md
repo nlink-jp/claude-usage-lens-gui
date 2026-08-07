@@ -65,6 +65,16 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   the CLI's datetime `--since`). Notifications fire only from the periodic refresh
   on an upward severity crossing, gated by the "Show notifications" setting — never
   while tuning settings.
+- **Calibration (CLI ADR-0001)**: `fetchWeeklyUsage` first asks
+  `CLIRunner.limits()`; when the CLI holds a usable calibration the derived caps
+  (both bases) and the **official reset cadence** ride along in the cached
+  `WeeklyUsage`, and `buildWeeklyStatus` prefers the calibrated cap over the
+  assumed budget (`WeeklyStatus.calibrated` drives the popover badge and the
+  Settings "Active cap" row). `calibrated: false` from the CLI ⇒ the settings
+  window/budget fallback — absence is a state, not an error. Settings →
+  Calibration shells out to `calibrate add`; feedback lands in
+  `calibrationMessage`. `limits --json` decodes with `.iso8601` dates — the
+  Go CLI emits whole-second RFC3339; keep both sides in lockstep.
 - **Settings/analysis windows, not the Settings scene**: a menu-bar (LSUIElement)
   app can't reliably focus the `Settings` scene / `SettingsLink`, so both open as
   plain `Window`s via `openWindow(id:)` + `NSApp.activate(ignoringOtherApps:)`.

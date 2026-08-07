@@ -47,12 +47,27 @@ final class WeeklyLimitTests: XCTestCase {
 
     func testWeeklyStatusMath() {
         let w = WeeklyStatus(basis: .cost, used: 150, limit: 200, state: .warning,
-                             resetStart: Date(), nextReset: Date())
+                             resetStart: Date(), nextReset: Date(),
+                             calibrated: false, calibrationAgeDays: nil)
         XCTAssertEqual(w.percent, 75, accuracy: 0.001)
         XCTAssertEqual(w.remaining, 50, accuracy: 0.001)
         // Over budget → remaining clamps at 0.
         let over = WeeklyStatus(basis: .cost, used: 250, limit: 200, state: .critical,
-                                resetStart: Date(), nextReset: Date())
+                                resetStart: Date(), nextReset: Date(),
+                                calibrated: false, calibrationAgeDays: nil)
         XCTAssertEqual(over.remaining, 0, accuracy: 0.001)
+    }
+
+    // Calibrated vs. assumed is part of identity: a status flipping between the
+    // two must publish (the popover badge and Settings row depend on it).
+    func testWeeklyStatusEqualityTracksCalibrated() {
+        let t = Date(timeIntervalSince1970: 1_770_000_000)
+        let a = WeeklyStatus(basis: .cost, used: 10, limit: 100, state: .normal,
+                             resetStart: t, nextReset: t,
+                             calibrated: false, calibrationAgeDays: nil)
+        let b = WeeklyStatus(basis: .cost, used: 10, limit: 100, state: .normal,
+                             resetStart: t, nextReset: t,
+                             calibrated: true, calibrationAgeDays: 0.5)
+        XCTAssertNotEqual(a, b)
     }
 }

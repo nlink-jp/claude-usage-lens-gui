@@ -144,6 +144,25 @@ enum CLIRunner {
         return try JSONDecoder().decode(Summary.self, from: data)
     }
 
+    /// The calibrated weekly-quota state (CLI ADR-0001). The CLI's timestamps
+    /// are RFC3339 with whole seconds, which .iso8601 decodes.
+    static func limits() throws -> LimitsPayload {
+        let dec = JSONDecoder()
+        dec.dateDecodingStrategy = .iso8601
+        return try dec.decode(LimitsPayload.self, from: try run(["limits", "--json"]))
+    }
+
+    /// Record an official /usage reading; the CLI derives and returns the caps.
+    static func calibrateAdd(utilizationPct: Double, resetsAt: Date) throws -> CalibrateResult {
+        let data = try run([
+            "calibrate", "add",
+            "--utilization", String(utilizationPct),
+            "--resets-at", UsageModel.datetimeString(resetsAt),
+            "--tz", "local", "--json",
+        ])
+        return try JSONDecoder().decode(CalibrateResult.self, from: data)
+    }
+
     static func rows(groupBy: String, since: String? = nil, sort: String? = nil, top: Int? = nil, dense: Bool = false) throws -> [Row] {
         var args = ["report", "--group-by", groupBy, "--tz", "local", "--json"]
         if let since { args += ["--since", since] }

@@ -30,6 +30,49 @@ final class DecodeTests: XCTestCase {
         XCTAssertEqual(rows[0].id, "claude-opus-4-8")
     }
 
+    // Contract test for `limits --json` (CLI ADR-0001): the calibrated payload,
+    // with RFC3339 whole-second timestamps, and the uncalibrated fallback form.
+    func testDecodeLimitsPayload() throws {
+        let json = """
+        {"calibrated":true,
+         "status":{
+           "window":"weekly",
+           "window_start":"2026-08-07T09:00:00Z",
+           "window_end":"2026-08-14T09:00:00Z",
+           "calibration":{"observed_at":"2026-08-08T02:01:00Z","resets_at":"2026-08-14T09:00:00Z",
+                          "utilization_pct":50,"source":"manual","age_days":0.4},
+           "caps":{"cost_usd":60.54,"tokens":304824},
+           "consumed":{"cost_usd":30.27,"tokens":152412},
+           "utilization_cost_pct":50.0,"utilization_tokens_pct":50.0,
+           "remaining":{"cost_usd":30.27,"tokens":152412}}}
+        """.data(using: .utf8)!
+        let dec = JSONDecoder()
+        dec.dateDecodingStrategy = .iso8601
+        let p = try dec.decode(LimitsPayload.self, from: json)
+        XCTAssertTrue(p.calibrated)
+        let st = try XCTUnwrap(p.status)
+        XCTAssertEqual(st.window, "weekly")
+        XCTAssertEqual(st.caps.costUSD, 60.54, accuracy: 0.001)
+        XCTAssertEqual(st.caps.tokens, 304_824)
+        XCTAssertEqual(st.consumed.costUSD, 30.27, accuracy: 0.001)
+        XCTAssertEqual(st.remaining.tokens, 152_412)
+        XCTAssertEqual(st.calibration.utilizationPct, 50, accuracy: 0.001)
+        XCTAssertEqual(st.calibration.source, "manual")
+        XCTAssertEqual(st.windowEnd.timeIntervalSince(st.windowStart), 7 * 86_400, accuracy: 1)
+
+        let none = try dec.decode(LimitsPayload.self,
+                                  from: #"{"calibrated":false,"reason":"no calibration recorded"}"#.data(using: .utf8)!)
+        XCTAssertFalse(none.calibrated)
+        XCTAssertNil(none.status)
+    }
+
+    func testDecodeCalibrateResult() throws {
+        let json = #"{"id":3,"caps":{"cost_usd":120.5,"tokens":600000}}"#.data(using: .utf8)!
+        let r = try JSONDecoder().decode(CalibrateResult.self, from: json)
+        XCTAssertEqual(r.id, 3)
+        XCTAssertEqual(r.caps.costUSD, 120.5, accuracy: 0.001)
+    }
+
     func testCompactFormatting() {
         XCTAssertEqual(PopoverView.compact(500), "500")
         XCTAssertEqual(PopoverView.compact(12_345), "12.3K")

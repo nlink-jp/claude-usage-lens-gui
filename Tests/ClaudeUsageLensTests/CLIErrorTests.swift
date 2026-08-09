@@ -10,7 +10,7 @@ final class CLIErrorTests: XCTestCase {
     }
 
     func testPermissionSummary() {
-        let s = CLIError.summarize(exitCode: 1, crashed: false, stderr: "open /Users/x/.claude: permission denied")
+        let s = CLIError.summarize(exitCode: 1, crashed: false, stderr: "open /Users/you/.claude: permission denied")
         XCTAssertTrue(s.lowercased().contains("permission"), s)
     }
 

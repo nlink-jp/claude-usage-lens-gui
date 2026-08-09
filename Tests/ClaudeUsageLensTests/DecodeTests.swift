@@ -96,15 +96,15 @@ final class DecodeTests: XCTestCase {
     func testUniqueShortLabels() {
         // Same basename under different parents ⇒ disambiguated with parent.
         let keys = [
-            "/Users/magi/works/nlink-jp/util-series/voice-studio-mcp",
-            "/Users/magi/works/nlink-jp/_wip/voice-studio-mcp",
-            "/Users/magi/works/nlink-jp",
+            "/Users/you/src/example-org/util-series/voice-studio-mcp",
+            "/Users/you/src/example-org/_wip/voice-studio-mcp",
+            "/Users/you/src/example-org",
             "claude-opus-4-8",
         ]
         let labels = AnalysisView.uniqueShortLabels(keys)
         XCTAssertEqual(labels[keys[0]], "util-series/voice-studio-mcp")
         XCTAssertEqual(labels[keys[1]], "_wip/voice-studio-mcp")
-        XCTAssertEqual(labels[keys[2]], "nlink-jp")   // unique basename ⇒ basename
+        XCTAssertEqual(labels[keys[2]], "example-org") // unique basename ⇒ basename
         XCTAssertEqual(labels[keys[3]], "claude-opus-4-8") // non-path passes through
         // All labels are unique — no two bars collapse.
         XCTAssertEqual(Set(labels.values).count, keys.count)

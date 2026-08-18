@@ -31,6 +31,7 @@ Sources/ClaudeUsageLens/
   WeeklyLimit.swift pure lastReset/state/forecast helpers +
                     LimitBasis/LimitState/WeeklyStatus/WeeklyForecast
   Settings.swift    UserDefaults keys/defaults + WeeklySettings snapshot
+  AppVersion.swift  the build's version for display (pure fallback rule)
   PopoverView.swift today's cost + tokens + last-30 + weekly bar
   AnalysisView.swift Swift Charts: period total + daily / model / project
   SettingsView.swift weekly-budget Form (shown in the settings Window)
@@ -91,6 +92,11 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
 - **Settings/analysis windows, not the Settings scene**: a menu-bar (LSUIElement)
   app can't reliably focus the `Settings` scene / `SettingsLink`, so both open as
   plain `Window`s via `openWindow(id:)` + `NSApp.activate(ignoringOtherApps:)`.
+- **Version on screen**: `make build-app` substitutes `git describe` into
+  Info.plist's `CFBundleShortVersionString`, and the popover footer prints it
+  **verbatim** (`AppVersion`, selectable). There is no `--version` here, so this
+  is the only way a bug report can name its build; "dev" means an unbundled run
+  or an unsubstituted placeholder. Keep the display rule pure + tested.
 - **Signing**: `--deep` signs the bundled CLI too. Pure SwiftUI/AppKit needs no
   entitlements (Hardened Runtime alone). Notarize + staple the `.app`.
 - **Native, not Wails**: deliberate deviation from the CLI's RFP — a menu-bar

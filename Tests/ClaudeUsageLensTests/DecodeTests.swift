@@ -141,3 +141,21 @@ final class DecodeTests: XCTestCase {
         XCTAssertEqual(UsageModel.calendarSince("1d", from: now, tz: jst), "2026-07-06")
     }
 }
+
+/// The version shown in the popover — a menu-bar app's only way to say which
+/// build it is.
+final class AppVersionTests: XCTestCase {
+    func testShownVerbatim() {
+        XCTAssertEqual(AppVersion.display("v0.2.1"), "v0.2.1")
+        // git describe's precision is the point: don't trim it away.
+        XCTAssertEqual(AppVersion.display("v0.2.1-3-gabc1234"), "v0.2.1-3-gabc1234")
+        XCTAssertEqual(AppVersion.display("v0.2.1-dirty"), "v0.2.1-dirty")
+    }
+
+    func testFallsBackToDev() {
+        XCTAssertEqual(AppVersion.display(nil), "dev")          // outside a bundle
+        XCTAssertEqual(AppVersion.display(""), "dev")
+        XCTAssertEqual(AppVersion.display("  "), "dev")
+        XCTAssertEqual(AppVersion.display("${VERSION}"), "dev") // unsubstituted placeholder
+    }
+}

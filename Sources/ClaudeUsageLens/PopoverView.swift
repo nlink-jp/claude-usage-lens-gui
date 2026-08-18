@@ -54,10 +54,15 @@ struct PopoverView: View {
                 weeklySection(w)
             }
 
-            if let ts = model.lastUpdated {
-                Text("Updated \(ts.formatted(date: .omitted, time: .shortened))")
-                    .font(.caption2).foregroundStyle(.tertiary)
+            HStack {
+                if let ts = model.lastUpdated {
+                    Text("Updated \(ts.formatted(date: .omitted, time: .shortened))")
+                }
+                Spacer()
+                // The only place the running build identifies itself.
+                Text(AppVersion.current).textSelection(.enabled)
             }
+            .font(.caption2).foregroundStyle(.tertiary)
 
             Divider()
             VStack(alignment: .leading, spacing: 4) {

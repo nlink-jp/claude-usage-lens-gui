@@ -18,6 +18,8 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   weekly mode shows the amount left *and* its share of the budget, `$116 · 58%`).
 - **Popover** (click the menu bar item): today's cost, input/output/cache tokens,
   the last-30-days total, and the weekly-budget bar (when enabled).
+- **Version**: the running build's version is printed in the popover footer
+  (selectable) — a menu-bar app has no `--version` to run.
 - **Analysis window**: period total plus daily trend, per-model and top-project
   breakdowns (Swift Charts), over a selectable 7/30/90-day period, with hover
   detail and optional per-model stacking.

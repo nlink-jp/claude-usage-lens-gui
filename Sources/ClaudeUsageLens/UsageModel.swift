@@ -40,14 +40,18 @@ final class UsageModel: ObservableObject {
         return PopoverView.compact(s.inputTokens + s.outputTokens + s.cacheTokens)
     }
 
-    /// The weekly-remaining menu-bar label; falls back to today's cost when the
+    /// The weekly-remaining menu-bar label — the amount left plus the same figure
+    /// as a share of the budget ("$116 · 58%"), since a bare amount says nothing
+    /// about how much of the week it covers. Falls back to today's cost when the
     /// weekly monitor is off.
     var weeklyRemainingLabel: String {
         guard let w = weeklyStatus else { return todayPrice }
+        let amount: String
         switch w.basis {
-        case .cost: return String(format: "$%.0f", w.remaining)
-        case .tokens: return PopoverView.compact(Int(w.remaining))
+        case .cost: amount = String(format: "$%.0f", w.remaining)   // menu bar: no cents
+        case .tokens: amount = PopoverView.compact(Int(w.remaining))
         }
+        return "\(amount) · \(w.remainingPercentDisplay)%"
     }
 
     // MARK: - Weekly budget

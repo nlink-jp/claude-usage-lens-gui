@@ -48,6 +48,13 @@ struct WeeklyStatus: Equatable {
     var percent: Double { limit > 0 ? used / limit * 100 : 0 }
     var remaining: Double { max(0, limit - used) }
 
+    /// Whole percents for display, derived as a pair so "42% used · 58% left"
+    /// always sums to 100 — rounding the two independently would show 42/57.
+    /// Over budget, `usedPercentDisplay` keeps going past 100 and the remainder
+    /// pins at 0, matching `remaining`.
+    var usedPercentDisplay: Int { Int(percent.rounded()) }
+    var remainingPercentDisplay: Int { max(0, 100 - usedPercentDisplay) }
+
     static func == (a: WeeklyStatus, b: WeeklyStatus) -> Bool {
         a.basis == b.basis && a.used == b.used && a.limit == b.limit
             && a.state.rank == b.state.rank && a.resetStart == b.resetStart

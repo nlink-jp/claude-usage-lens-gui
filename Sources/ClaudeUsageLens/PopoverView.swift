@@ -92,7 +92,8 @@ struct PopoverView: View {
         .onAppear { model.refreshToday() }
     }
 
-    /// Weekly-budget progress: used / limit, a colored bar, %, and the next reset.
+    /// Weekly-budget progress: used / limit, a colored bar, the used/left split in
+    /// both amount and percent, and the next reset.
     @ViewBuilder
     private func weeklySection(_ w: WeeklyStatus) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -111,7 +112,10 @@ struct PopoverView: View {
             ProgressView(value: min(w.percent, 100), total: 100)
                 .tint(w.state.color ?? .accentColor)
             HStack {
-                Text("\(Int(w.percent))% used").font(.caption2).foregroundStyle(.secondary)
+                // Percent on both sides of the split: the amount left alone
+                // doesn't say how much of the week it buys.
+                Text("\(w.usedPercentDisplay)% used · \(UsageModel.amount(w.remaining, w.basis)) left (\(w.remainingPercentDisplay)%)")
+                    .font(.caption2).monospacedDigit().foregroundStyle(.secondary)
                 Spacer()
                 Text("resets \(UsageModel.resetLabel(w.nextReset))").font(.caption2).foregroundStyle(.tertiary)
             }

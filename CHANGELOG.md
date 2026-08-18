@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Percent alongside every weekly figure.** The menu bar's weekly-remaining
+  mode now reads `$116 · 58%` instead of a bare `$116` — an amount alone says
+  nothing about how much of the week it buys. The popover's weekly line gives
+  both sides of the split in amount and percent (`68% used · $1,200.00 left
+  (32%)`), and Settings → Current gains a **Remaining** row. The two percents
+  are derived as a pair, so they always sum to 100 rather than rounding to 99.
+
 ## [0.2.0] - 2026-08-08
 
 ### Added

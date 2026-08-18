@@ -100,7 +100,9 @@ struct SettingsView: View {
             if enabled, let w = model.weeklyStatus {
                 Section("Current") {
                     LabeledContent("This week",
-                        value: "\(UsageModel.amount(w.used, w.basis)) / \(UsageModel.amount(w.limit, w.basis))  (\(Int(w.percent))%)")
+                        value: "\(UsageModel.amount(w.used, w.basis)) / \(UsageModel.amount(w.limit, w.basis))  (\(w.usedPercentDisplay)%)")
+                    LabeledContent("Remaining",
+                        value: "\(UsageModel.amount(w.remaining, w.basis))  (\(w.remainingPercentDisplay)%)")
                 }
             }
         }

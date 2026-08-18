@@ -14,7 +14,8 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
 ## What it does
 
 - **Menu bar**: live "today's cost" (e.g. `$12.34`), refreshed on a timer.
-  Display is configurable (price / tokens / two-line / weekly-remaining).
+  Display is configurable (price / tokens / two-line / weekly-remaining — the
+  weekly mode shows the amount left *and* its share of the budget, `$116 · 58%`).
 - **Popover** (click the menu bar item): today's cost, input/output/cache tokens,
   the last-30-days total, and the weekly-budget bar (when enabled).
 - **Analysis window**: period total plus daily trend, per-model and top-project
@@ -24,7 +25,8 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   or **tokens (in+out)** with **two-tier** warning / critical thresholds. As you
   approach the limit the menu-bar number turns orange/red, the popover shows a
   colored used/limit bar, and (optionally) a **notification** fires. Settings
-  via ⌘, / "Settings…" in the popover.
+  via ⌘, / "Settings…" in the popover. Both sides of the split are given in
+  amount **and** percent (`68% used · $1,200.00 left (32%)`).
 - **Calibrated to the real limit** (optional): Claude's actual quota lives
   server-side and can't be read from logs, but you can **calibrate**: run
   `/usage` in Claude Code, type the official weekly percentage and its reset

@@ -71,3 +71,41 @@ final class WeeklyLimitTests: XCTestCase {
         XCTAssertNotEqual(a, b)
     }
 }
+
+// MARK: - Percent display
+
+final class WeeklyPercentDisplayTests: XCTestCase {
+    private func status(used: Double, limit: Double) -> WeeklyStatus {
+        WeeklyStatus(basis: .cost, used: used, limit: limit, state: .normal,
+                     resetStart: Date(), nextReset: Date(),
+                     calibrated: false, calibrationAgeDays: nil)
+    }
+
+    // The used/left percents are shown side by side, so they must sum to 100 —
+    // rounding each independently would print "42% used · 57% left".
+    func testUsedAndRemainingPercentsSumTo100() {
+        for used in stride(from: 0.0, through: 200.0, by: 0.37) {
+            let w = status(used: used, limit: 200)
+            XCTAssertEqual(w.usedPercentDisplay + w.remainingPercentDisplay, 100,
+                           "used=\(used) split doesn't sum to 100")
+        }
+    }
+
+    func testOverBudgetPinsRemainingAtZero() {
+        let w = status(used: 324, limit: 200)
+        XCTAssertEqual(w.usedPercentDisplay, 162)   // keeps counting past 100
+        XCTAssertEqual(w.remainingPercentDisplay, 0)
+        XCTAssertEqual(w.remaining, 0, accuracy: 0.001)
+    }
+
+    func testMenuBarWeeklyLabelCarriesPercent() {
+        let m = UsageModel()
+        m.weeklyStatus = status(used: 84, limit: 200)
+        XCTAssertEqual(m.weeklyRemainingLabel, "$116 · 58%")
+
+        m.weeklyStatus = WeeklyStatus(basis: .tokens, used: 20_000_000, limit: 50_000_000,
+                                      state: .normal, resetStart: Date(), nextReset: Date(),
+                                      calibrated: false, calibrationAgeDays: nil)
+        XCTAssertEqual(m.weeklyRemainingLabel, "30.0M · 60%")
+    }
+}

@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.1] - 2026-08-18
 
 ### Added
 
@@ -22,8 +22,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   turns. Within the first 5% of a window the extrapolation is noise, and it says
   `Too early this week to project a pace` rather than printing a wild number.
   Also shown in Settings → Current as **At this pace**.
+- **The running build's version**, in the popover footer (selectable). A
+  menu-bar app has no `--version` to run, so there was previously no way to tell
+  which build was running.
 
-Bundled CLI unchanged — both are computed from data the app already had.
+Bundled CLI unchanged — the weekly additions are computed from data the app
+already had.
 
 ## [0.2.0] - 2026-08-08
 
@@ -202,7 +206,9 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.9...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.9...v0.2.0
 [0.1.9]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/nlink-jp/claude-usage-lens-gui/releases/tag/v0.1.7

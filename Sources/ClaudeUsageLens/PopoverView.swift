@@ -93,7 +93,8 @@ struct PopoverView: View {
     }
 
     /// Weekly-budget progress: used / limit, a colored bar, the used/left split in
-    /// both amount and percent, and the next reset.
+    /// both money and percent, the next reset, and where the week is headed at
+    /// the current pace.
     @ViewBuilder
     private func weeklySection(_ w: WeeklyStatus) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -119,7 +120,21 @@ struct PopoverView: View {
                 Spacer()
                 Text("resets \(UsageModel.resetLabel(w.nextReset))").font(.caption2).foregroundStyle(.tertiary)
             }
+            if let pace = UsageModel.forecastLabel(w) {
+                Label(pace, systemImage: UsageModel.forecastIcon(w))
+                    .font(.caption2)
+                    .foregroundStyle(Self.forecastColor(w))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
+            }
         }
+    }
+
+    /// Tint for the pace line: the projection's own severity, muted while the
+    /// window is too young for the extrapolation to mean anything.
+    private static func forecastColor(_ w: WeeklyStatus) -> Color {
+        guard let f = w.forecast, f.reliable else { return .secondary }
+        return f.state.color ?? .secondary
     }
 
     private func tokenRow(_ label: String, _ n: Int) -> some View {

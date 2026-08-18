@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   both sides of the split in amount and percent (`68% used · $1,200.00 left
   (32%)`), and Settings → Current gains a **Remaining** row. The two percents
   are derived as a pair, so they always sum to 100 rather than rounding to 99.
+- **Budget-overrun forecast.** The popover projects where the week lands at the
+  pace so far — `On pace for $5,200.00 (137%) — budget gone Sat 14:26` — by
+  spreading the window's usage over its elapsed slice and extrapolating to the
+  reset. The line carries the *projection's* own severity (critical at ≥100% of
+  the limit, warning at your warning threshold), so a week that is still within
+  its thresholds but heading over the limit is flagged before the usage bar
+  turns. Within the first 5% of a window the extrapolation is noise, and it says
+  `Too early this week to project a pace` rather than printing a wild number.
+  Also shown in Settings → Current as **At this pace**.
+
+Bundled CLI unchanged — both are computed from data the app already had.
 
 ## [0.2.0] - 2026-08-08
 

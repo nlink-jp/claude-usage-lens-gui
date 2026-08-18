@@ -28,7 +28,8 @@ Sources/ClaudeUsageLens/
   CLIRunner.swift   locate + run the CLI, decode JSON
   Models.swift      Codable Summary / Row (match the CLI's report JSON)
   MenuBarMode.swift menu-bar display mode (price/tokens/both/weekly)
-  WeeklyLimit.swift pure lastReset/state helpers + LimitBasis/LimitState/WeeklyStatus
+  WeeklyLimit.swift pure lastReset/state/forecast helpers +
+                    LimitBasis/LimitState/WeeklyStatus/WeeklyForecast
   Settings.swift    UserDefaults keys/defaults + WeeklySettings snapshot
   PopoverView.swift today's cost + tokens + last-30 + weekly bar
   AnalysisView.swift Swift Charts: period total + daily / model / project
@@ -65,6 +66,18 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   the CLI's datetime `--since`). Notifications fire only from the periodic refresh
   on an upward severity crossing, gated by the "Show notifications" setting — never
   while tuning settings.
+- **Weekly percents are a derived pair**: `usedPercentDisplay` /
+  `remainingPercentDisplay` on `WeeklyStatus`, not two independent roundings —
+  they're printed side by side and must sum to 100. Over budget the used side
+  keeps counting past 100 and the remainder pins at 0, matching `remaining`.
+- **Pace forecast** (`WeeklyLimit.forecast`, pure + tested): linear
+  extrapolation of the window's usage to its end, plus the instant the limit is
+  hit when that lands before the reset. Its `state` is scored against a fixed
+  100% critical line (not the user's critical threshold) so "will exceed" always
+  reads red, and `reliable` is false inside the first 5% of the window — the UI
+  names that state instead of showing a number built from one session.
+  `buildWeeklyStatus` attaches it, so views stay dumb; `UsageModel.forecastLabel`
+  / `forecastIcon` render it and are unit-tested as pure functions.
 - **Calibration (CLI ADR-0001)**: `fetchWeeklyUsage` first asks
   `CLIRunner.limits()`; when the CLI holds a usable calibration the derived caps
   (both bases) and the **official reset cadence** ride along in the cached

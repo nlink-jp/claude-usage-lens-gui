@@ -27,6 +27,14 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   colored used/limit bar, and (optionally) a **notification** fires. Settings
   via ⌘, / "Settings…" in the popover. Both sides of the split are given in
   amount **and** percent (`68% used · $1,200.00 left (32%)`).
+- **Will I run out?** The popover also projects where the week lands at the pace
+  so far — `On pace for $5,200.00 (137%) — budget gone Sat 14:26` — spreading
+  what you've spent over the elapsed slice of the window and extrapolating to
+  the reset. The line is tinted by the *projection's* severity, so a week that
+  is still inside its thresholds but heading over the limit shows up before the
+  usage bar does. In the first ~8 hours of a window one session would dominate
+  the average, so it says `Too early this week to project a pace` instead of
+  printing a wild number.
 - **Calibrated to the real limit** (optional): Claude's actual quota lives
   server-side and can't be read from logs, but you can **calibrate**: run
   `/usage` in Claude Code, type the official weekly percentage and its reset

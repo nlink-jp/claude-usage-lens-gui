@@ -109,3 +109,138 @@ final class WeeklyPercentDisplayTests: XCTestCase {
         XCTAssertEqual(m.weeklyRemainingLabel, "30.0M · 60%")
     }
 }
+
+// MARK: - Burn-rate forecast
+
+final class WeeklyForecastTests: XCTestCase {
+    private let start = Date(timeIntervalSince1970: 1_770_000_000)
+    private var end: Date { start.addingTimeInterval(7 * 86_400) }
+    private func at(days: Double) -> Date { start.addingTimeInterval(days * 86_400) }
+
+    /// Half the week gone, half the budget spent → lands exactly on the limit,
+    /// at the reset instant.
+    func testOnPaceForExactlyTheLimit() {
+        let f = WeeklyLimit.forecast(used: 100, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertEqual(f.elapsedFraction, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(f.projectedUsed, 200, accuracy: 0.0001)
+        XCTAssertEqual(f.projectedPercent, 100, accuracy: 0.0001)
+        XCTAssertTrue(f.willExceed)
+        XCTAssertEqual(f.state.rank, LimitState.critical.rank)  // ≥100% is always critical
+        XCTAssertEqual(f.exhaustionDate!.timeIntervalSince1970, end.timeIntervalSince1970, accuracy: 1)
+    }
+
+    func testOverPaceProjectsExhaustionBeforeReset() {
+        let f = WeeklyLimit.forecast(used: 150, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertEqual(f.projectedUsed, 300, accuracy: 0.0001)
+        XCTAssertEqual(f.projectedPercent, 150, accuracy: 0.0001)
+        XCTAssertTrue(f.willExceed)
+        // $50 left at $150 / 3.5d → 1.1667 more days.
+        XCTAssertEqual(f.exhaustionDate!.timeIntervalSince1970,
+                       at(days: 3.5 + 50.0 / (150.0 / 3.5)).timeIntervalSince1970, accuracy: 1)
+    }
+
+    func testUnderPaceStaysWithinBudget() {
+        let f = WeeklyLimit.forecast(used: 50, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertEqual(f.projectedPercent, 50, accuracy: 0.0001)
+        XCTAssertFalse(f.willExceed)
+        XCTAssertEqual(f.state.rank, LimitState.normal.rank)
+        XCTAssertNil(f.exhaustionDate)   // the limit isn't reached before the reset
+    }
+
+    /// Between the warning threshold and the limit: flagged, but not critical.
+    func testProjectionAboveWarnThresholdIsWarning() {
+        let f = WeeklyLimit.forecast(used: 90, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertEqual(f.projectedPercent, 90, accuracy: 0.0001)
+        XCTAssertEqual(f.state.rank, LimitState.warning.rank)
+        XCTAssertFalse(f.willExceed)
+    }
+
+    /// Already over: no exhaustion instant to name (it's in the past).
+    func testAlreadyOverBudget() {
+        let f = WeeklyLimit.forecast(used: 250, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertTrue(f.willExceed)
+        XCTAssertNil(f.exhaustionDate)
+    }
+
+    /// One burst in the first hour would project an absurd week — flagged, not shown as fact.
+    func testEarlyWindowIsUnreliable() {
+        let early = WeeklyLimit.forecast(used: 20, limit: 200, windowStart: start, windowEnd: end,
+                                         now: at(days: 1.0 / 24), warnPercent: 80)!
+        XCTAssertFalse(early.reliable)
+        // Just past the 5%-of-a-week mark (~8.4h) the projection is taken seriously.
+        let later = WeeklyLimit.forecast(used: 20, limit: 200, windowStart: start, windowEnd: end,
+                                         now: at(days: 0.5), warnPercent: 80)!
+        XCTAssertTrue(later.reliable)
+    }
+
+    func testNoProjectionFromDegenerateInputs() {
+        // No limit to project against.
+        XCTAssertNil(WeeklyLimit.forecast(used: 10, limit: 0, windowStart: start, windowEnd: end,
+                                          now: at(days: 1), warnPercent: 80))
+        // Window with no duration.
+        XCTAssertNil(WeeklyLimit.forecast(used: 10, limit: 200, windowStart: start, windowEnd: start,
+                                          now: at(days: 1), warnPercent: 80))
+        // At / before the window start: nothing has elapsed to extrapolate from.
+        XCTAssertNil(WeeklyLimit.forecast(used: 0, limit: 200, windowStart: start, windowEnd: end,
+                                          now: start, warnPercent: 80))
+        // Stale window (the next refresh moves it forward).
+        XCTAssertNil(WeeklyLimit.forecast(used: 10, limit: 200, windowStart: start, windowEnd: end,
+                                          now: at(days: 8), warnPercent: 80))
+    }
+
+    func testZeroUsageProjectsZero() {
+        let f = WeeklyLimit.forecast(used: 0, limit: 200, windowStart: start, windowEnd: end,
+                                     now: at(days: 3.5), warnPercent: 80)!
+        XCTAssertEqual(f.projectedUsed, 0, accuracy: 0.0001)
+        XCTAssertNil(f.exhaustionDate)
+        XCTAssertFalse(f.willExceed)
+    }
+
+    // MARK: label
+
+    private func status(used: Double, limit: Double, now: Date) -> WeeklyStatus {
+        let f = WeeklyLimit.forecast(used: used, limit: limit, windowStart: start, windowEnd: end,
+                                     now: now, warnPercent: 80)
+        return WeeklyStatus(basis: .cost, used: used, limit: limit, state: .normal,
+                            resetStart: start, nextReset: end,
+                            calibrated: false, calibrationAgeDays: nil, forecast: f)
+    }
+
+    func testForecastLabels() {
+        let over = status(used: 150, limit: 200, now: at(days: 3.5))
+        XCTAssertEqual(UsageModel.forecastLabel(over),
+                       "On pace for $300.00 (150%) — budget gone \(UsageModel.resetLabel(over.forecast!.exhaustionDate!))")
+
+        let fine = status(used: 50, limit: 200, now: at(days: 3.5))
+        XCTAssertEqual(UsageModel.forecastLabel(fine), "On pace for $100.00 (50%) by reset")
+
+        let spent = status(used: 250, limit: 200, now: at(days: 3.5))
+        XCTAssertEqual(UsageModel.forecastLabel(spent), "Over budget — on pace for $500.00 (250%)")
+
+        // The early window names its own state instead of going quiet.
+        let early = status(used: 20, limit: 200, now: at(days: 1.0 / 24))
+        XCTAssertEqual(UsageModel.forecastLabel(early), "Too early this week to project a pace")
+
+        // No forecast at all → the pace line is simply absent.
+        let none = WeeklyStatus(basis: .cost, used: 10, limit: 200, state: .normal,
+                                resetStart: start, nextReset: end,
+                                calibrated: false, calibrationAgeDays: nil)
+        XCTAssertNil(UsageModel.forecastLabel(none))
+    }
+
+    func testForecastIcons() {
+        XCTAssertEqual(UsageModel.forecastIcon(status(used: 150, limit: 200, now: at(days: 3.5))),
+                       "exclamationmark.triangle.fill")
+        XCTAssertEqual(UsageModel.forecastIcon(status(used: 90, limit: 200, now: at(days: 3.5))),
+                       "exclamationmark.circle")
+        XCTAssertEqual(UsageModel.forecastIcon(status(used: 50, limit: 200, now: at(days: 3.5))),
+                       "checkmark.circle")
+        XCTAssertEqual(UsageModel.forecastIcon(status(used: 20, limit: 200, now: at(days: 1.0 / 24))),
+                       "clock")
+    }
+}

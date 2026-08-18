@@ -31,6 +31,29 @@ enum LimitState {
     }
 }
 
+/// A linear burn-rate projection over the current weekly window: where the week
+/// lands if usage keeps flowing at the average rate observed so far.
+struct WeeklyForecast: Equatable {
+    /// How far through the window we are, 0…1.
+    let elapsedFraction: Double
+    /// Usage extrapolated to the window end at the observed average rate.
+    let projectedUsed: Double
+    /// `projectedUsed` as a percentage of the limit — may exceed 100.
+    let projectedPercent: Double
+    /// When the limit is reached at this rate, if that instant falls inside the
+    /// window. nil = not before the reset, or already over the limit.
+    let exhaustionDate: Date?
+    /// False in the first sliver of the window, where a single session dominates
+    /// the average and the extrapolation is noise. The UI says so rather than
+    /// presenting a wild number as a forecast.
+    let reliable: Bool
+    /// Severity of the projection itself: critical at ≥100% of the limit,
+    /// warning at ≥ the user's warning threshold.
+    let state: LimitState
+
+    var willExceed: Bool { projectedPercent >= 100 }
+}
+
 /// Immutable snapshot of the weekly budget vs. usage.
 struct WeeklyStatus: Equatable {
     let basis: LimitBasis
@@ -44,6 +67,23 @@ struct WeeklyStatus: Equatable {
     let calibrated: Bool
     /// Days since the calibration reading (calibrated only) — staleness hint.
     let calibrationAgeDays: Double?
+    /// Where this week lands at the current pace; nil when no projection can be
+    /// derived (degenerate window, or `now` outside it).
+    let forecast: WeeklyForecast?
+
+    init(basis: LimitBasis, used: Double, limit: Double, state: LimitState,
+         resetStart: Date, nextReset: Date, calibrated: Bool,
+         calibrationAgeDays: Double?, forecast: WeeklyForecast? = nil) {
+        self.basis = basis
+        self.used = used
+        self.limit = limit
+        self.state = state
+        self.resetStart = resetStart
+        self.nextReset = nextReset
+        self.calibrated = calibrated
+        self.calibrationAgeDays = calibrationAgeDays
+        self.forecast = forecast
+    }
 
     var percent: Double { limit > 0 ? used / limit * 100 : 0 }
     var remaining: Double { max(0, limit - used) }
@@ -89,5 +129,45 @@ enum WeeklyLimit {
         if percent >= criticalPercent { return .critical }
         if percent >= warnPercent { return .warning }
         return .normal
+    }
+
+    /// Project the window's end state from the pace so far: `used` spread over
+    /// the elapsed slice of [`windowStart`, `windowEnd`], extrapolated linearly
+    /// to the whole window. Returns nil when there is nothing to project from —
+    /// no limit, a degenerate window, or `now` outside it (a stale window is
+    /// corrected by the next refresh).
+    ///
+    /// `minimumElapsedFraction` guards the noisy head of the window: 5% of a
+    /// week is ~8h, before which one session's burst would project an absurd
+    /// total, so the result is flagged `reliable: false` instead.
+    static func forecast(used: Double, limit: Double,
+                         windowStart: Date, windowEnd: Date, now: Date,
+                         warnPercent: Double,
+                         minimumElapsedFraction: Double = 0.05) -> WeeklyForecast? {
+        let total = windowEnd.timeIntervalSince(windowStart)
+        let elapsed = now.timeIntervalSince(windowStart)
+        guard limit > 0, total > 0, elapsed > 0, elapsed <= total else { return nil }
+
+        let elapsedFraction = elapsed / total
+        let projectedUsed = used / elapsedFraction
+        let projectedPercent = projectedUsed / limit * 100
+
+        // Time to the limit at the average rate, when it lands before the reset.
+        var exhaustion: Date?
+        let ratePerSecond = used / elapsed
+        if used < limit, ratePerSecond > 0 {
+            let hit = now.addingTimeInterval((limit - used) / ratePerSecond)
+            if hit <= windowEnd { exhaustion = hit }
+        }
+
+        return WeeklyForecast(
+            elapsedFraction: elapsedFraction,
+            projectedUsed: projectedUsed,
+            projectedPercent: projectedPercent,
+            exhaustionDate: exhaustion,
+            reliable: elapsedFraction >= minimumElapsedFraction,
+            // Anything projecting to 100% of the limit is critical regardless of
+            // where the user put their "critical" threshold for actual usage.
+            state: state(percent: projectedPercent, warnPercent: warnPercent, criticalPercent: 100))
     }
 }

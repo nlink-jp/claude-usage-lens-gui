@@ -107,10 +107,18 @@ final class UsageModel: ObservableObject {
         let used = s.basis == .cost ? u.cost : u.tokens
         let percent = used / limit * 100
         let state = WeeklyLimit.state(percent: percent, warnPercent: s.warnPercent, criticalPercent: s.criticalPercent)
+        // Where this week lands at the pace so far. Derived here (not in the
+        // view) so the views stay dumb and the maths stays testable; it is as
+        // fresh as `used`, i.e. rebuilt on every refresh and settings change.
+        let forecast = WeeklyLimit.forecast(
+            used: used, limit: limit,
+            windowStart: u.reset, windowEnd: u.nextReset, now: Date(),
+            warnPercent: s.warnPercent)
         return WeeklyStatus(basis: s.basis, used: used, limit: limit, state: state,
                             resetStart: u.reset, nextReset: u.nextReset,
                             calibrated: calibratedLimit != nil,
-                            calibrationAgeDays: u.calibrationAgeDays)
+                            calibrationAgeDays: u.calibrationAgeDays,
+                            forecast: forecast)
     }
 
     // MARK: - Calibration (ADR-0001)
@@ -191,6 +199,30 @@ final class UsageModel: ObservableObject {
     /// Format an amount per basis: "$123.45" or a compact token count.
     static func amount(_ v: Double, _ basis: LimitBasis) -> String {
         basis == .cost ? String(format: "$%.2f", v) : PopoverView.compact(Int(v))
+    }
+
+    /// One-line answer to "am I going to blow through the budget?", from the
+    /// pace so far. nil when there is no projection to show; the early-window
+    /// case says so out loud rather than going quiet.
+    static func forecastLabel(_ w: WeeklyStatus) -> String? {
+        guard let f = w.forecast else { return nil }
+        guard f.reliable else { return "Too early this week to project a pace" }
+        let projected = "\(amount(f.projectedUsed, w.basis)) (\(Int(f.projectedPercent.rounded()))%)"
+        if w.used >= w.limit { return "Over budget — on pace for \(projected)" }
+        if let hit = f.exhaustionDate {
+            return "On pace for \(projected) — budget gone \(resetLabel(hit))"
+        }
+        return "On pace for \(projected) by reset"
+    }
+
+    /// SF Symbol for the pace line, matching `forecastLabel`.
+    static func forecastIcon(_ w: WeeklyStatus) -> String {
+        guard let f = w.forecast, f.reliable else { return "clock" }
+        switch f.state {
+        case .critical: return "exclamationmark.triangle.fill"
+        case .warning: return "exclamationmark.circle"
+        case .normal: return "checkmark.circle"
+        }
     }
 
     /// A local `yyyy-MM-dd'T'HH:mm` string the CLI parses as an exact instant.

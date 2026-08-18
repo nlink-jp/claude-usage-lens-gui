@@ -103,6 +103,9 @@ struct SettingsView: View {
                         value: "\(UsageModel.amount(w.used, w.basis)) / \(UsageModel.amount(w.limit, w.basis))  (\(w.usedPercentDisplay)%)")
                     LabeledContent("Remaining",
                         value: "\(UsageModel.amount(w.remaining, w.basis))  (\(w.remainingPercentDisplay)%)")
+                    if let pace = UsageModel.forecastLabel(w) {
+                        LabeledContent("At this pace", value: pace)
+                    }
                 }
             }
         }

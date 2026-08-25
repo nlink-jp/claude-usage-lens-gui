@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.2.2] - 2026-08-25
 
 ### Fixed
 
@@ -221,6 +221,7 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
 [Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...HEAD
+[0.2.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.9...v0.2.0
 [0.1.9]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.8...v0.1.9

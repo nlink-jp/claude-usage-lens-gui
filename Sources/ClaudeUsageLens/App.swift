@@ -1,7 +1,6 @@
 import AppKit
 import SwiftUI
 
-@main
 struct ClaudeUsageLensApp: App {
     @StateObject private var model = Self.makeModel()
     @AppStorage("menuBarMode") private var menuBarMode: MenuBarMode = .price

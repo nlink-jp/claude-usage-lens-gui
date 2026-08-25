@@ -21,7 +21,10 @@ make test       # swift test
 
 ```
 Sources/ClaudeUsageLens/
-  App.swift         @main; MenuBarExtra live label (tinted by weekly state) +
+  Entry.swift       @main; single-instance guard, then ClaudeUsageLensApp.main()
+  SingleInstance.swift singleInstanceDecision() — startup duplicate-
+                    instance guard (pure; pids in, decision out)
+  App.swift         MenuBarExtra live label (tinted by weekly state) +
                     Window("analysis") + Window("settings")
   UsageModel.swift  ObservableObject; timer → ingest + summary; loadAnalysis();
                     weekly-budget compute + notifications
@@ -92,6 +95,17 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
 - **Settings/analysis windows, not the Settings scene**: a menu-bar (LSUIElement)
   app can't reliably focus the `Settings` scene / `SettingsLink`, so both open as
   plain `Window`s via `openWindow(id:)` + `NSApp.activate(ignoringOtherApps:)`.
+- **Notification clicks launch by bundle ID — enforce a single instance.**
+  Clicking a banner makes notificationd open the app via LaunchServices,
+  which resolves `jp.nlink.claude-usage-lens-gui` among *all* registered
+  copies (`dist/` dev builds, release-verification extractions,
+  `/Applications`) and may start a different copy than the running one →
+  two menu bar items, double polling. Guarded at two layers:
+  `LSMultipleInstancesProhibited` (Info.plist, stops LaunchServices
+  launches) and a startup check in `Entry.main`
+  (`singleInstanceDecision`, pure + tested) that exits with a stderr note
+  (covers direct exec / `open -n`). Side effect: to run a `dist/` build,
+  quit the installed instance first — a second copy now refuses to start.
 - **Version on screen**: `make build-app` substitutes `git describe` into
   Info.plist's `CFBundleShortVersionString`, and the popover footer prints it
   **verbatim** (`AppVersion`, selectable). There is no `--version` here, so this

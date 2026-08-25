@@ -51,6 +51,10 @@ Costs follow the CLI's model: Cowork is exact (from its audit log), Claude Code
 is an API list-price-equivalent estimate. All dates use your local timezone.
 See the CLI's README.
 
+The app is single-instance: starting a second copy (for example, a
+notification click resolving to a different copy of the .app) logs to
+stderr and exits, leaving the running instance alone.
+
 ## Requirements
 
 The `claude-usage-lens` CLI — **bundled inside the `.app`**, so a release build is

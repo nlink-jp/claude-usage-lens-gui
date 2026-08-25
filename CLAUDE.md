@@ -40,7 +40,8 @@ make test
 
 ## Architecture
 
-- `App.swift` — `@main`, `MenuBarExtra(.window)` live label + analysis `Window`
+- `Entry.swift` — `@main`; single-instance guard, then `ClaudeUsageLensApp.main()`
+- `App.swift` — `MenuBarExtra(.window)` live label + analysis `Window`
 - `UsageModel` — timer-driven `ingest` + today summary; on-demand analysis load
 - `CLIRunner` — locate + run the CLI, decode JSON
 - `Models` — `Summary` / `Row` Codable (match report `--json`)

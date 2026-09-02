@@ -3,6 +3,45 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-09-02
+
+### Fixed
+
+- **Claude Fable 5.1 usage showed as $0**, understating today's cost, the
+  weekly budget, the charts and the analysis totals — the same failure as Opus
+  5 in v0.1.9: the bundled CLI's rate table predated the model, and an unpriced
+  model is costed as free. Fable 5.1 is now Claude Code's default model, so the
+  undercount grew with every turn.
+
+  Bundles `claude-usage-lens` **v0.7.0**, which prices Fable 5.1 (and Mythos
+  5.1) — including its cheaper cache reads, 0.025× rather than the usual 0.1×,
+  which is most of a Fable session's cost — and corrects Sonnet 5 to the $2 /
+  $10 that is now its standard price.
+
+  **After updating, click Reprice in the popover** (or run the bundled CLI's
+  `reprice`) to correct the rows already in your store; until then they keep
+  their $0 and the badge below says so.
+
+### Added
+
+- **Unpriced usage is flagged instead of silently counted as $0.** The CLI
+  now reports how many stored Claude Code turns carry tokens at $0 (a model its
+  rates don't know, or a rate update not yet applied to history), and the app
+  shows it: a `⚠︎` after the menu-bar figure, and an orange section in the
+  popover naming the count and the model over the last 30 days, with a
+  **Reprice** button that applies the bundled CLI's current rates to stored
+  history and refreshes. The attempt's own state lives in the same box —
+  running, or failed with the CLI's reason — and if turns remain unpriced
+  after a reprice the hint changes to "update the app (or price the model in
+  the CLI config) and reprice again": that is a model this build's CLI cannot
+  price either. The button is disabled only while a reprice is in flight.
+  Previously the only signal was a stderr warning at ingest time, which the
+  app never surfaced.
+- **`make verify-release` checks the bundled CLI** reports a clean release
+  version (`vX.Y.Z`), so a stale or dirty CLI build cannot ship inside the
+  `.app` — with the new fields optional, a stale CLI would have removed this
+  very feature silently.
+
 ## [0.2.2] - 2026-08-25
 
 ### Fixed

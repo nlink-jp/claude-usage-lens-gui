@@ -18,6 +18,12 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   weekly mode shows the amount left *and* its share of the budget, `$116 · 58%`).
 - **Popover** (click the menu bar item): today's cost, input/output/cache tokens,
   the last-30-days total, and the weekly-budget bar (when enabled).
+- **Unpriced usage is flagged, not hidden**: when the store holds turns at $0
+  that should have cost something — a model newer than the bundled CLI's rate
+  table, or a table update not yet applied to history — the menu-bar figure
+  carries a `⚠︎` and the popover names the count and the model, with a
+  **Reprice** button that applies the current rates to stored history. Turns
+  that stay unpriced after that need an app update.
 - **Version**: the running build's version is printed in the popover footer
   (selectable) — a menu-bar app has no `--version` to run.
 - **Analysis window**: period total plus daily trend, per-model and top-project

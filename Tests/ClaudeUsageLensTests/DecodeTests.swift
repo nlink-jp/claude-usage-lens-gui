@@ -15,6 +15,33 @@ final class DecodeTests: XCTestCase {
         XCTAssertEqual(s.totalUSD, 486.42, accuracy: 0.001)
         XCTAssertEqual(s.peakDay, "2026-07-04")
         XCTAssertEqual(s.projection30USD, 3648.16, accuracy: 0.001)
+        // A pre-0.7.0 CLI omits the unpriced fields; the summary still decodes.
+        XCTAssertNil(s.unpricedRecords)
+        XCTAssertNil(s.unpricedModels)
+    }
+
+    // Contract test for the unpriced fields (CLI ≥ 0.7.0): the count and its
+    // per-model split, and the empty map the CLI emits when nothing is unpriced.
+    func testDecodeSummaryUnpriced() throws {
+        let json = """
+        {"first_day":"2026-09-02","last_day":"2026-09-02","active_days":1,"records":804,
+         "input_tokens":5240,"output_tokens":712799,"cache_tokens":246317193,
+         "total_usd":316.13,"daily_avg_usd":316.13,"peak_day":"2026-09-02",
+         "peak_usd":316.13,"projection_30d_usd":9483.92,
+         "unpriced_records":67,"unpriced_models":{"claude-fable-5-1":67}}
+        """.data(using: .utf8)!
+        let s = try JSONDecoder().decode(Summary.self, from: json)
+        XCTAssertEqual(s.unpricedRecords, 67)
+        XCTAssertEqual(s.unpricedModels, ["claude-fable-5-1": 67])
+
+        let none = """
+        {"first_day":"","last_day":"","active_days":0,"records":0,"input_tokens":0,
+         "output_tokens":0,"cache_tokens":0,"total_usd":0,"daily_avg_usd":0,"peak_day":"",
+         "peak_usd":0,"projection_30d_usd":0,"unpriced_records":0,"unpriced_models":{}}
+        """.data(using: .utf8)!
+        let e = try JSONDecoder().decode(Summary.self, from: none)
+        XCTAssertEqual(e.unpricedRecords, 0)
+        XCTAssertEqual(e.unpricedModels, [:])
     }
 
     func testDecodeRows() throws {

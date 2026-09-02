@@ -12,6 +12,8 @@ final class UsageModel: ObservableObject {
     @Published var lastError: String?       // short, user-facing summary
     @Published var lastErrorDetail: String? // raw CLI output, shown smaller
     @Published var lastUpdated: Date?
+    @Published var unpriced: UnpricedUsage?  // $0-but-billable turns in the last 30 days (nil = none)
+    @Published var repriceAttempted = false  // Reprice was run this session; what remains is beyond it
 
     private var lastNotifiedRank = 0        // highest state we've already notified, this window
 
@@ -291,6 +293,7 @@ final class UsageModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.todaySummary = s
                     self.last30USD = last30.totalUSD
+                    self.unpriced = Self.unpricedUsage(last30)
                     self.weeklyUsage = weeklyUsage
                     self.applyWeekly(self.buildWeeklyStatus(), notify: true)
                     self.lastError = nil
@@ -301,6 +304,58 @@ final class UsageModel: ObservableObject {
                 self.setError(error)
             }
         }
+    }
+
+    // MARK: - Unpriced usage
+
+    /// Apply the bundled CLI's current rates to the stored history (`reprice`),
+    /// then refresh. This is the exit for the unpriced badge: after an app
+    /// update the store still holds the $0 rows the previous build wrote, and
+    /// one reprice corrects them in place. What is still unpriced afterwards is
+    /// a model this build does not know either.
+    func reprice() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            do {
+                try CLIRunner.reprice()
+                DispatchQueue.main.async { self.repriceAttempted = true }
+                self.refreshToday()
+            } catch {
+                self.setError(error)
+            }
+        }
+    }
+
+    /// The badge state from a summary: nil when nothing is unpriced (or the CLI
+    /// predates the field), otherwise the count and its per-model split.
+    static func unpricedUsage(_ s: Summary) -> UnpricedUsage? {
+        guard let n = s.unpricedRecords, n > 0 else { return nil }
+        return UnpricedUsage(records: n, models: s.unpricedModels ?? [:])
+    }
+
+    /// The badge's headline: how many turns, on what, are counted at $0.
+    static func unpricedLabel(_ u: UnpricedUsage) -> String {
+        let turns = u.records == 1 ? "1 turn" : "\(u.records) turns"
+        switch u.models.count {
+        case 0: return "\(turns) counted at $0"
+        case 1: return "\(turns) on \(u.models.keys.first!) counted at $0"
+        default: return "\(turns) on \(u.models.count) models counted at $0"
+        }
+    }
+
+    /// The badge's second line: the consequence and the way out. Before a
+    /// reprice the way out is the Reprice button; after one, only an update can
+    /// help, because the rates this build ships do not know the model.
+    static func unpricedHint(repriceAttempted: Bool) -> String {
+        repriceAttempted
+            ? "Still unpriced after repricing: this build's rates predate the model. Update the app."
+            : "Missing from every figure shown. Reprice applies the current rates to stored history."
+    }
+
+    /// The menu-bar text with a warning mark appended while unpriced usage
+    /// exists, so an understated number is never shown as if it were complete.
+    static func menuLabel(_ base: String, unpriced: Bool) -> String {
+        unpriced ? base + " ⚠︎" : base
     }
 
     /// Set the user-facing error summary plus the raw CLI detail (issue #2), on

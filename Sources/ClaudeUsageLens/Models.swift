@@ -97,6 +97,13 @@ struct Summary: Codable {
     let peakUSD: Double
     let projection30USD: Double
 
+    /// Claude Code records in the period that carry tokens yet are stored at
+    /// $0 — a model the CLI could not price when it ingested them, or a rate
+    /// table updated since without a `reprice` (CLI ≥ 0.7.0). Optional so a
+    /// summary from an older CLI on PATH still decodes.
+    let unpricedRecords: Int?
+    let unpricedModels: [String: Int]?
+
     enum CodingKeys: String, CodingKey {
         case firstDay = "first_day"
         case lastDay = "last_day"
@@ -110,5 +117,16 @@ struct Summary: Codable {
         case peakDay = "peak_day"
         case peakUSD = "peak_usd"
         case projection30USD = "projection_30d_usd"
+        case unpricedRecords = "unpriced_records"
+        case unpricedModels = "unpriced_models"
     }
+}
+
+/// Usage the store holds at $0 although it should have cost something: turns
+/// on a model the bundled CLI's rate table did not know when they were
+/// ingested, or that a newer table now prices but `reprice` has not yet
+/// touched. Every figure the app shows understates by these turns.
+struct UnpricedUsage: Equatable {
+    let records: Int
+    let models: [String: Int]   // model id → record count
 }

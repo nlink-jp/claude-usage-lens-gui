@@ -137,6 +137,13 @@ enum CLIRunner {
         _ = try run(["ingest"])
     }
 
+    /// Recompute stored Claude Code costs with the CLI's current rate table —
+    /// the fix for rows a previous build stored at $0 (Cowork rows are never
+    /// touched; the CLI guarantees that).
+    static func reprice() throws {
+        _ = try run(["reprice"])
+    }
+
     static func summary(since: String) throws -> Summary {
         // --tz local: day boundaries / "today" follow the user's local day (and
         // match calendarSince, which computes in the local zone).

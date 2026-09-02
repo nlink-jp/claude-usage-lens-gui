@@ -40,16 +40,19 @@ struct ClaudeUsageLensApp: App {
     @ViewBuilder
     private var menuBarLabel: some View {
         let state = model.weeklyStatus?.state ?? .normal
+        // A warning mark rides along while the store holds unpriced turns: the
+        // number is then an undercount, and the popover says by how much.
+        let unpriced = model.unpriced != nil
         switch menuBarMode {
         case .price:
-            colored(Text(model.todayPrice), state.color)
+            colored(Text(UsageModel.menuLabel(model.todayPrice, unpriced: unpriced)), state.color)
         case .tokens:
-            colored(Text(model.todayTokens), state.color)
+            colored(Text(UsageModel.menuLabel(model.todayTokens, unpriced: unpriced)), state.color)
         case .weekly:
-            colored(Text(model.weeklyRemainingLabel), state.color)
+            colored(Text(UsageModel.menuLabel(model.weeklyRemainingLabel, unpriced: unpriced)), state.color)
         case .both:
             Image(nsImage: Self.twoLineImage(
-                top: model.todayPrice, bottom: model.todayTokens,
+                top: UsageModel.menuLabel(model.todayPrice, unpriced: unpriced), bottom: model.todayTokens,
                 color: Self.menuNSColor(state)))
         }
     }

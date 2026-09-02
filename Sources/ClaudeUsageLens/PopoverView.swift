@@ -32,6 +32,10 @@ struct PopoverView: View {
                     Text(model.last30USD.map { String(format: "$%.2f", $0) } ?? "—").monospacedDigit()
                 }
                 .font(.callout)
+
+                if let u = model.unpriced {
+                    unpricedSection(u)
+                }
             } else if let err = model.lastError {
                 Label("Couldn't load usage", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
@@ -133,6 +137,32 @@ struct PopoverView: View {
                     .padding(.top, 2)
             }
         }
+    }
+
+    /// Turns the store holds at $0 although they should have cost something —
+    /// the figures above understate by these. Names the count and the model,
+    /// then offers the way out: Reprice (after an app update) or, if that has
+    /// already been tried, an update.
+    @ViewBuilder
+    private func unpricedSection(_ u: UnpricedUsage) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label(UsageModel.unpricedLabel(u), systemImage: "exclamationmark.triangle")
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .top) {
+                Text(UsageModel.unpricedHint(repriceAttempted: model.repriceAttempted))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                Button("Reprice") { model.reprice() }
+                    .controlSize(.mini)
+                    .disabled(model.repriceAttempted)
+            }
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 6).fill(Color.orange.opacity(0.08)))
     }
 
     /// Tint for the pace line: the projection's own severity, muted while the

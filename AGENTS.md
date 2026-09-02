@@ -63,6 +63,21 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   `CLIError.summarize` (crash / permission / missing path / first stderr line);
   `UsageModel` exposes `lastError` (summary) + `lastErrorDetail` (raw), and the
   popover shows the summary with the raw output as smaller, selectable detail.
+- **Unpriced badge (CLI ≥ 0.7.0 contract)**: `report --summary --json` carries
+  `unpriced_records` / `unpriced_models` — Claude Code rows that hold tokens at
+  $0 (a model the CLI's table didn't know at ingest, or a table updated since
+  without `reprice`). `UsageModel.unpricedUsage` derives the badge from the
+  **last-30-days** summary, not today's, so an update that bundles a newer table
+  still surfaces the rows the old build wrote. Surfaces: `⚠︎` appended to the
+  menu label (`menuLabel`), an orange section in the popover naming count +
+  model, and a **Reprice** button (`CLIRunner.reprice()` then refresh).
+  `repriceAttempted` flips the hint to "update the app" and disables the button
+  — what survives a reprice is a model this build's CLI doesn't know either.
+  Both fields are optional in `Summary` so a pre-0.7.0 CLI on PATH still
+  decodes. Text rules are pure and tested (`UnpricedTests`). This exists
+  because the CLI's ingest-time warning goes to stderr with exit 0, which the
+  app never showed — Opus 5 (v0.1.9) and Fable 5.1 (v0.3.0) both sat at $0
+  silently before it.
 - **Weekly monitor**: settings live in UserDefaults (`Settings.swift` keys +
   `WeeklySettings` snapshot; `SettingsView` binds the same keys via @AppStorage).
   `UsageModel` caches the raw weekly usage (cost + in+out tokens) so limit / basis

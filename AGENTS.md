@@ -71,13 +71,22 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   still surfaces the rows the old build wrote. Surfaces: `⚠︎` appended to the
   menu label (`menuLabel`), an orange section in the popover naming count +
   model, and a **Reprice** button (`CLIRunner.reprice()` then refresh).
-  `repriceAttempted` flips the hint to "update the app" and disables the button
-  — what survives a reprice is a model this build's CLI doesn't know either.
-  Both fields are optional in `Summary` so a pre-0.7.0 CLI on PATH still
-  decodes. Text rules are pure and tested (`UnpricedTests`). This exists
-  because the CLI's ingest-time warning goes to stderr with exit 0, which the
-  app never showed — Opus 5 (v0.1.9) and Fable 5.1 (v0.3.0) both sat at $0
-  silently before it.
+  `repricePhase` (idle / running / done / failed(reason)) drives the hint via
+  `unpricedHint(phase:)` — every phase has a line, because a Bool could not say
+  "running" or "failed" and a silent second wait reads as a dead button. A
+  failed reprice shows the CLI's reason **in the box**, not via `lastError`
+  (the popover's error branch only renders when there is no summary at all).
+  The button is disabled only while running: a finished attempt may be
+  retried (reprice is idempotent, and the user may have priced the model in
+  the CLI config), and the phase resets to idle when the badge clears (new
+  episode). What survives a reprice is a model this build's CLI doesn't know
+  either. Both fields are optional in `Summary` so a pre-0.7.0 CLI on PATH
+  still decodes — which is also why `make verify-release` refuses a bundled
+  CLI whose `--version` is not a clean `vX.Y.Z`: a stale CLI would remove this
+  feature silently. Text rules are pure and tested (`UnpricedTests`). This
+  exists because the CLI's ingest-time warning goes to stderr with exit 0,
+  which the app never showed — Opus 5 (v0.1.9) and Fable 5.1 (v0.3.0) both
+  sat at $0 silently before it.
 - **Weekly monitor**: settings live in UserDefaults (`Settings.swift` keys +
   `WeeklySettings` snapshot; `SettingsView` binds the same keys via @AppStorage).
   `UsageModel` caches the raw weekly usage (cost + in+out tokens) so limit / basis

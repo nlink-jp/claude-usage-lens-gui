@@ -130,3 +130,12 @@ struct UnpricedUsage: Equatable {
     let records: Int
     let models: [String: Int]   // model id → record count
 }
+
+/// Where the Reprice button's attempt stands, for the current badge episode.
+/// A Bool cannot say "running" or "failed", and both must be named on screen.
+enum RepricePhase: Equatable {
+    case idle
+    case running
+    case done                 // reprice completed; the badge (if still up) is beyond it
+    case failed(String)       // the CLI failed; the reason, as the user should read it
+}

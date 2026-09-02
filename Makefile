@@ -67,6 +67,14 @@ verify-release:
 	@xcrun stapler validate $(APP_BUNDLE)
 	@test -f "$(DIST_DIR)/$(NAME)-$(VERSION)-darwin-arm64.zip" || { \
 		echo "verify-release: FAIL — release zip missing: $(DIST_DIR)/$(NAME)-$(VERSION)-darwin-arm64.zip"; exit 1; }
+	@cli="$(APP_BUNDLE)/Contents/Resources/claude-usage-lens"; \
+		test -x "$$cli" || { echo "verify-release: FAIL — no bundled CLI at $$cli (build the CLI first; see CLI_BIN)"; exit 1; }; \
+		v=$$("$$cli" --version 2>/dev/null | awk '{print $$NF}'); \
+		echo "$$v" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$$' || { \
+			echo "verify-release: FAIL — bundled CLI reports '$$v'. Bundle a release build of the CLI"; \
+			echo "  (a clean vX.Y.Z tag: no -dirty, no -N-g<sha>) — a stale CLI silently removes"; \
+			echo "  the features this app's CHANGELOG promises. Rebuild it at its tag, then make package."; exit 1; }; \
+		echo "verify-release: bundled CLI $$v"
 	@echo "verify-release: OK ($(VERSION) — marker present, ticket stapled)"
 
 ## test: run tests

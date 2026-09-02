@@ -42,15 +42,18 @@ final class UnpricedTests: XCTestCase {
                        "3 turns counted at $0")
     }
 
-    func testHintNamesTheWayOut() {
-        // Every state has a non-empty exit, and the two states differ.
-        let before = UsageModel.unpricedHint(repriceAttempted: false)
-        let after = UsageModel.unpricedHint(repriceAttempted: true)
-        XCTAssertFalse(before.isEmpty)
-        XCTAssertFalse(after.isEmpty)
-        XCTAssertNotEqual(before, after)
-        XCTAssertTrue(before.contains("Reprice"))
-        XCTAssertTrue(after.contains("Update the app"))
+    func testHintNamesEveryPhaseAndItsWayOut() {
+        // Every phase has a non-empty, distinct line — no silent state.
+        let phases: [RepricePhase] = [.idle, .running, .done, .failed("claude-usage-lens crashed (exit 2)")]
+        let hints = phases.map { UsageModel.unpricedHint(phase: $0) }
+        XCTAssertTrue(hints.allSatisfy { !$0.isEmpty })
+        XCTAssertEqual(Set(hints).count, hints.count)
+
+        XCTAssertTrue(hints[0].contains("Reprice"))                 // idle: the button is the exit
+        XCTAssertTrue(hints[0].contains("last 30 days"))            // the window the count covers
+        XCTAssertTrue(hints[1].contains("Repricing"))               // running: say so
+        XCTAssertTrue(hints[2].contains("Update the app"))          // done, still unpriced: next exit
+        XCTAssertTrue(hints[3].contains("crashed (exit 2)"))        // failed: the reason, verbatim
     }
 
     func testMenuLabelMark() {

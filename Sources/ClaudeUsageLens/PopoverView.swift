@@ -142,7 +142,8 @@ struct PopoverView: View {
     /// Turns the store holds at $0 although they should have cost something —
     /// the figures above understate by these. Names the count and the model,
     /// then offers the way out: Reprice (after an app update) or, if that has
-    /// already been tried, an update.
+    /// already been tried, an update. The attempt's own state (running /
+    /// failed / done) is shown here too, next to the button that caused it.
     @ViewBuilder
     private func unpricedSection(_ u: UnpricedUsage) -> some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -151,18 +152,27 @@ struct PopoverView: View {
                 .foregroundStyle(.orange)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .top) {
-                Text(UsageModel.unpricedHint(repriceAttempted: model.repriceAttempted))
+                Text(UsageModel.unpricedHint(phase: model.repricePhase))
                     .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Self.hintColor(model.repricePhase))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
+                // Disabled only while a reprice is in flight; a finished or
+                // failed attempt may always be retried (the CLI's reprice is
+                // idempotent, and the user may have priced the model in config).
                 Button("Reprice") { model.reprice() }
                     .controlSize(.mini)
-                    .disabled(model.repriceAttempted)
+                    .disabled(model.repricePhase == .running)
             }
         }
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 6).fill(Color.orange.opacity(0.08)))
+    }
+
+    /// The hint's tint: a failure reads as one; everything else stays quiet.
+    private static func hintColor(_ phase: RepricePhase) -> Color {
+        if case .failed = phase { return .orange }
+        return .secondary
     }
 
     /// Tint for the pace line: the projection's own severity, muted while the

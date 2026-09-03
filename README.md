@@ -34,7 +34,10 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   approach the limit the menu-bar number turns orange/red, the popover shows a
   colored used/limit bar, and (optionally) a **notification** fires. Settings
   via ⌘, / "Settings…" in the popover. Both sides of the split are given in
-  amount **and** percent (`68% used · $1,200.00 left (32%)`).
+  amount **and** percent (`68% used · $1,200.00 left (32%)`). Turning
+  notifications on asks macOS for permission right then; if notifications are
+  turned off for the app in System Settings, the settings window says so under
+  the toggle and offers an **Open Settings** button to the Notifications pane.
 - **Will I run out?** The popover also projects where the week lands at the pace
   so far — `On pace for $5,200.00 (137%) — budget gone Sat 14:26` — spreading
   what you've spent over the elapsed slice of the window and extrapolating to

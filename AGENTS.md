@@ -36,6 +36,7 @@ Sources/ClaudeUsageLens/
                     LimitBasis/LimitState/WeeklyStatus/WeeklyForecast
   Settings.swift    UserDefaults keys/defaults + WeeklySettings snapshot
   LoginItem.swift   SMAppService wrapper for launch-at-login (pure state mapping)
+  NotificationAuth.swift  pure denied? rules for the notification permission + pane URL
   AppVersion.swift  the build's version for display (pure fallback rule)
   PopoverView.swift today's cost + tokens + last-30 + weekly bar
   AnalysisView.swift Swift Charts: period total + daily / model / project
@@ -149,6 +150,14 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   a disabled control (the only way to register is the switch). Every call is read
   back (`verifyMessage`) and any disagreement is shown beside the toggle with an
   "Open Login Items" button. Registration needs a real `.app`; `swift run` says so.
+- **Notification denial is stated, not swallowed (`NotificationAuth.swift`)**:
+  `requestNotificationAuth` publishes `notificationsDenied` from the
+  `granted`/`error` result (and logs a refusal to stderr); `SettingsView` shows
+  an orange line + "Open Settings" (Notifications pane) under the toggle while
+  it is ON and denied. `refreshNotificationStatus` re-reads the status without
+  prompting on appear and on `didBecomeActive`, so the line clears after the
+  user flips the switch in System Settings. Only `.denied` counts —
+  `.notDetermined` is "not asked yet", never a denial.
 
 ## Design reference
 

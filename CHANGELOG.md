@@ -3,6 +3,19 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.2] - 2026-09-03
+
+### Fixed
+
+- **A notification denial was invisible.** When macOS has notifications
+  turned off for the app (declined, or the first prompt dismissed by quitting),
+  the "Show notifications" toggle stayed ON with nothing ever arriving and no
+  hint why. The permission result is now kept, the settings window writes
+  "Notifications are turned off for this app in System Settings." under the
+  toggle with an **Open Settings** button to the Notifications pane, and the
+  line clears on its own once the switch is flipped there. The refusal is
+  also logged to stderr. (#3)
+
 ## [0.3.1] - 2026-09-03
 
 ### Added
@@ -269,6 +282,9 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
 [Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...HEAD
+[0.3.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.1.9...v0.2.0

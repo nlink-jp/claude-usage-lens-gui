@@ -9,6 +9,7 @@ final class UsageModel: ObservableObject {
     @Published var todaySummary: Summary?
     @Published var last30USD: Double?       // actual last-30-days total (matches the analysis panel)
     @Published var weeklyStatus: WeeklyStatus?  // weekly-budget monitor (nil = disabled/unavailable)
+    @Published var notificationsDenied = false  // the OS refuses notifications; the toggle alone cannot say so
     @Published var lastError: String?       // short, user-facing summary
     @Published var lastErrorDetail: String? // raw CLI output, shown smaller
     @Published var lastUpdated: Date?
@@ -181,12 +182,43 @@ final class UsageModel: ObservableObject {
         }
     }
 
-    /// Ask for notification permission (once). Call when the monitor is enabled.
+    /// Ask for notification permission at the moment the user turns the
+    /// feature on — not when the first alert would fire, which may be never.
+    /// A refusal is published (`notificationsDenied`) and logged: a toggle that
+    /// is ON while nothing can ever arrive is a broken promise.
     func requestNotificationAuth() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        guard let center = Self.notificationCenter else { return }
+        center.requestAuthorization(options: [.alert, .sound]) { [weak self] granted, error in
+            let denied = NotificationAuth.denied(granted: granted, error: error)
+            DispatchQueue.main.async { self?.notificationsDenied = denied }
+            if denied {
+                FileHandle.standardError.write(Data((NotificationAuth.logLine(error: error) + "\n").utf8))
+            }
+        }
+    }
+
+    /// Re-read the OS's current answer without prompting — for the settings
+    /// window on appear and whenever the app comes back to the front, so the
+    /// denial line disappears once the user has flipped the switch in System
+    /// Settings.
+    func refreshNotificationStatus() {
+        guard let center = Self.notificationCenter else { return }
+        center.getNotificationSettings { [weak self] settings in
+            let denied = NotificationAuth.denied(status: settings.authorizationStatus)
+            DispatchQueue.main.async { self?.notificationsDenied = denied }
+        }
+    }
+
+    /// `UNUserNotificationCenter.current()` aborts the process when it is not
+    /// running from an app bundle (a bare `swift run` binary, the xctest runner
+    /// — which has a bundle identifier but no bundle proxy), so outside a
+    /// `.app` there is no center and notifications are simply skipped.
+    private static var notificationCenter: UNUserNotificationCenter? {
+        Bundle.main.bundleURL.pathExtension == "app" ? UNUserNotificationCenter.current() : nil
     }
 
     private func notifyWeekly(_ w: WeeklyStatus) {
+        guard let center = Self.notificationCenter else { return }
         let content = UNMutableNotificationContent()
         content.title = w.state == .critical ? "Weekly budget critical" : "Weekly budget warning"
         content.body = "Used \(Self.amount(w.used, w.basis)) of \(Self.amount(w.limit, w.basis)) "
@@ -195,7 +227,7 @@ final class UsageModel: ObservableObject {
         let req = UNNotificationRequest(
             identifier: "weekly-\(w.state.rank)-\(Int(w.resetStart.timeIntervalSince1970))",
             content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(req)
+        center.add(req)
     }
 
     /// Format an amount per basis: "$123.45" or a compact token count.

@@ -63,6 +63,18 @@ struct SettingsView: View {
                     }
                 Text("Off = colour/bar only, no system notifications.")
                     .font(.caption).foregroundStyle(.secondary)
+                if enabled && notificationsEnabled && model.notificationsDenied {
+                    // The toggle is ON but macOS will deliver nothing: say so,
+                    // and open the only place that can change it.
+                    HStack(alignment: .top) {
+                        Text("Notifications are turned off for this app in System Settings.")
+                            .font(.caption).foregroundStyle(.orange)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer()
+                        Button("Open Settings") { NSWorkspace.shared.open(NotificationAuth.settingsURL) }
+                            .controlSize(.small)
+                    }
+                }
             }
 
             Section("Calibration") {
@@ -134,7 +146,16 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { launchAtLogin = LoginItem.isOn(LoginItem.current) }
+        .onAppear {
+            launchAtLogin = LoginItem.isOn(LoginItem.current)
+            model.refreshNotificationStatus()
+        }
+        // Coming back from System Settings › Notifications: re-read the answer so
+        // the denial line clears without reopening the window.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            launchAtLogin = LoginItem.isOn(LoginItem.current)
+            model.refreshNotificationStatus()
+        }
         .frame(width: 380)
         .fixedSize(horizontal: false, vertical: true)
         // Instant feedback: limit/basis/thresholds rebuild the status from cached

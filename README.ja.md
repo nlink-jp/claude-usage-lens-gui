@@ -66,6 +66,13 @@ macOS 14+（Apple シリコン）専用。リリース済み — Developer ID �
 `claude-usage-lens/dist/` 開発パスも参照します。リリースビルドは env 変数を無視するため、
 署名済み同梱バイナリから実行先を逸らされることはありません。
 
+## ログイン時に起動
+
+Settings… › General › **Launch at login** で macOS のログイン項目（SMAppService）に
+登録します。macOS が承認を求める場合は設定ウィンドウにその旨と システム設定 › 一般 ›
+ログイン項目 を開くボタンが出ます。スイッチは macOS が報告する状態を映し、確認できない
+状態を主張しません。
+
 ## ビルド
 
 ```sh

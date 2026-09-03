@@ -3,6 +3,15 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.1] - 2026-09-03
+
+### Added
+
+- **Launch at login** toggle in Settings (General). SMAppService is the source
+  of truth: the switch mirrors its status, a change is read back and any
+  disagreement (approval pending, not registered, bare binary) is written
+  next to the switch with a button to System Settings › Login Items.
+
 ## [0.3.0] - 2026-09-02
 
 ### Fixed

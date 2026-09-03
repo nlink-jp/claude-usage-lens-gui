@@ -35,6 +35,7 @@ Sources/ClaudeUsageLens/
   WeeklyLimit.swift pure lastReset/state/forecast helpers +
                     LimitBasis/LimitState/WeeklyStatus/WeeklyForecast
   Settings.swift    UserDefaults keys/defaults + WeeklySettings snapshot
+  LoginItem.swift   SMAppService wrapper for launch-at-login (pure state mapping)
   AppVersion.swift  the build's version for display (pure fallback rule)
   PopoverView.swift today's cost + tokens + last-30 + weekly bar
   AnalysisView.swift Swift Charts: period total + daily / model / project
@@ -141,6 +142,13 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
 - **Native, not Wails**: deliberate deviation from the CLI's RFP — a menu-bar
   app is cleaner native. macOS-only; a cross-platform GUI would be a separate
   Wails project.
+
+- **Launch at login (`LoginItem.swift`)**: `SMAppService.mainApp` is the source of
+  truth — no persisted flag; the toggle mirrors `LoginItem.current` on appear and
+  after every change. `.notFound` (never registered) maps to `notEnabled`, never to
+  a disabled control (the only way to register is the switch). Every call is read
+  back (`verifyMessage`) and any disagreement is shown beside the toggle with an
+  "Open Login Items" button. Registration needs a real `.app`; `swift run` says so.
 
 ## Design reference
 

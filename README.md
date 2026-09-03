@@ -73,6 +73,13 @@ In **DEBUG builds only**, a `$CLAUDE_USAGE_LENS_BIN` override and the sibling
 `claude-usage-lens/dist/` dev path are also honored. Release builds ignore the
 env var so it can't redirect execution away from the signed bundle.
 
+## Launch at login
+
+Settings… › General › **Launch at login** registers the app as a macOS login
+item (SMAppService). If macOS asks for approval, the settings window says so
+and offers a button to System Settings › General › Login Items. The switch
+mirrors what macOS reports; it never claims a state it could not verify.
+
 ## Build
 
 ```sh

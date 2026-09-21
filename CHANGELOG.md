@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`make verify-release` now pins the bundled CLI to one version.** It already
+  refused a missing CLI and a development build, but accepted any clean tag, so an
+  app built against an older CLI release passed. `CLI_VERSION` now states the CLI
+  this release ships, and the bundled binary must report exactly that tag. `CLI_BIN`
+  also finds the CLI's release binary (`dist/<cli>-darwin-arm64`, which is what its
+  `make package` leaves) before the development one.
+
 ## [0.3.2] - 2026-09-03
 
 ### Fixed

@@ -5,7 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-09-23
+
 ### Fixed
+
+- **Claude Opus 5.5 turns were shown at $0.** The bundled CLI is now
+  **v0.8.0**, which prices Claude Opus 5.5 ($4 / $20, cache reads at 0.05×,
+  fast mode $8 / $40) and the retired models still listed on Anthropic's
+  pricing page. The unpriced-records badge flagged it until now. Turns stored
+  before this update keep their $0 cost until `claude-usage-lens reprice` is
+  run once.
 
 - **`make verify-release` now pins the bundled CLI to one version.** It already
   refused a missing CLI and a development build, but accepted any clean tag, so an

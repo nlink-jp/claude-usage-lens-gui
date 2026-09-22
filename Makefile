@@ -20,7 +20,7 @@ CLI_BIN ?= $(firstword $(wildcard ../claude-usage-lens/dist/claude-usage-lens-da
 # refuses a bundle whose CLI is missing, is a development build, or reports any
 # other version. Bump it in the same commit that bundles a newer CLI — and when
 # the CLI is released, this line is the reminder that this app must follow.
-CLI_VERSION ?= v0.7.0
+CLI_VERSION ?= v0.8.0
 
 # macOS Developer ID signing / notarization (see nlink-jp/.github CONVENTIONS.md
 # §Code Signing → GUI apps). Pure SwiftUI/AppKit needs no JIT entitlements —

@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Claude Sonnet 5.5 turns are priced.** The bundled CLI is now **v0.8.1**,
+  which prices Claude Sonnet 5.5 ($2 / $10, the standard 0.1× cache read, no
+  fast mode). Without it, Sonnet 5.5 turns would be stored at $0 and raise the
+  unpriced-records badge. Turns stored before this update keep their $0 cost
+  until `claude-usage-lens reprice` is run once.
 - The release zip no longer carries AppleDouble (`._*`) entries: the app is
   zipped with `ditto --norsrc --noextattr`, so its signature survives unpacking
   with `unzip`. `make verify-release` refuses a zip that carries them.

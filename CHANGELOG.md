@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-09-29
+
 ### Fixed
 
 - **Claude Sonnet 5.5 turns are priced.** The bundled CLI is now **v0.8.1**,
@@ -312,7 +314,9 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.2.2...v0.3.0

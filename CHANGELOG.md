@@ -15,6 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   would have stayed wrong in every past figure. A failed pass is logged and
   retried at the next launch.
 
+### Fixed
+
+- **Claude Haiku 5.5 turns are priced, and Claude Sonnet 5.5 cache reads are
+  no longer counted at 2×.** The bundled CLI is now **v0.9.0**, which prices
+  Haiku 5.5 by prompt length ($0.10 / $0.50 up to 100,000 prompt tokens,
+  $0.50 / $2.50 over) and charges Sonnet 5.5 cache reads at 0.05× ($0.10 /
+  MTok) as the pricing page now lists. Stored Sonnet 5.5 turns are corrected by
+  the launch-time reprice above.
+
 ## [0.3.4] - 2026-09-29
 
 ### Fixed

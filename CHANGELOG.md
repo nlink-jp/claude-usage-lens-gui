@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-14
+
 ### Added
 
 - **The app reprices stored history once whenever the bundled CLI changes.**
@@ -333,7 +335,8 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.4...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.1...v0.3.2

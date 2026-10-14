@@ -98,6 +98,17 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   exists because the CLI's ingest-time warning goes to stderr with exit 0,
   which the app never showed — Opus 5 (v0.1.9) and Fable 5.1 (v0.3.0) both
   sat at $0 silently before it.
+- **Reprice on a CLI change** (`CLIUpgrade`, v0.4.0): `start()` queues
+  `repriceIfCLIChanged()` ahead of the first refresh on the serial CLI queue.
+  It reads the bundled CLI's `--version`, compares it with UserDefaults
+  `lastRepricedCLIVersion`, and on any difference (no record counts as one)
+  runs `reprice`, then records the version. A failure is logged to stderr and
+  leaves the record, so the next launch retries. This exists because the badge
+  only sees $0 rows: CLI v0.8.1 stored Claude Sonnet 5.5 cache reads at 2×,
+  and a wrong-but-nonzero rate has no on-screen trace. An unreadable
+  `--version` (not `claude-usage-lens <tag>`) skips the pass rather than
+  keying on a string it cannot interpret. Rules are pure and tested
+  (`CLIUpgradeTests`).
 - **Weekly monitor**: settings live in UserDefaults (`Settings.swift` keys +
   `WeeklySettings` snapshot; `SettingsView` binds the same keys via @AppStorage).
   `UsageModel` caches the raw weekly usage (cost + in+out tokens) so limit / basis

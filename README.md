@@ -24,6 +24,10 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
   carries a `⚠︎` and the popover names the count and the model, with a
   **Reprice** button that applies the current rates to stored history. Turns
   that stay unpriced after that need an app update.
+- **Rate corrections reach stored history by themselves**: when the bundled CLI
+  changes (an app update), the app reprices the stored Claude Code history once
+  at launch, before its first refresh. This also fixes rates the previous
+  build got wrong rather than missed — which no badge can show.
 - **Version**: the running build's version is printed in the popover footer
   (selectable) — a menu-bar app has no `--version` to run.
 - **Analysis window**: period total plus daily trend, per-model and top-project

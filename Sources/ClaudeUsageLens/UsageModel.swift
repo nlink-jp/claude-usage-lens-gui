@@ -305,6 +305,7 @@ final class UsageModel: ObservableObject {
             options: [.userInitiatedAllowingIdleSystemSleep], reason: "usage monitoring")
         let s = WeeklySettings.current()
         if s.enabled && s.notificationsEnabled { requestNotificationAuth() }
+        repriceIfCLIChanged()  // queued first: the first refresh sees repriced rows
         refreshToday()
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
             self?.refreshToday()
@@ -337,6 +338,26 @@ final class UsageModel: ObservableObject {
                 }
             } catch {
                 self.setError(error)
+            }
+        }
+    }
+
+    /// Reprice the stored history once when the bundled CLI differs from the
+    /// one it was last repriced with, so an update's rate corrections reach
+    /// the rows the previous build stored (see CLIUpgrade). Runs on the serial
+    /// CLI queue, ahead of any refresh queued after it. A failure is logged and
+    /// leaves the record untouched, so the next launch tries again.
+    func repriceIfCLIChanged(defaults: UserDefaults = .standard) {
+        queue.async {
+            do {
+                let current = try CLIRunner.version()
+                let last = defaults.string(forKey: CLIUpgrade.defaultsKey)
+                guard CLIUpgrade.shouldReprice(current: current, lastRepriced: last),
+                      let current else { return }
+                try CLIRunner.reprice()
+                defaults.set(current, forKey: CLIUpgrade.defaultsKey)
+            } catch {
+                FileHandle.standardError.write(Data((CLIUpgrade.logLine(error: error) + "\n").utf8))
             }
         }
     }

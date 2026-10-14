@@ -144,6 +144,11 @@ enum CLIRunner {
         _ = try run(["reprice"])
     }
 
+    /// The CLI's version tag ("v0.9.0"), or nil when its output is unexpected.
+    static func version() throws -> String? {
+        CLIUpgrade.parseVersion(String(decoding: try run(["--version"]), as: UTF8.self))
+    }
+
     static func summary(since: String) throws -> Summary {
         // --tz local: day boundaries / "today" follow the user's local day (and
         // match calendarSince, which computes in the local zone).

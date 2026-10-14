@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The app reprices stored history once whenever the bundled CLI changes.**
+  At launch, before the first refresh, it compares the bundled CLI's version
+  with the one it last repriced with and, if they differ, runs `reprice`. The
+  unpriced badge only sees turns stored at $0; a rate the previous build got
+  wrong — Claude Sonnet 5.5's cache reads, below — left no trace on screen and
+  would have stayed wrong in every past figure. A failed pass is logged and
+  retried at the next launch.
+
 ## [0.3.4] - 2026-09-29
 
 ### Fixed

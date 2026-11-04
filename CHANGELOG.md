@@ -3,7 +3,14 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-04
+
+### Changed
+
+- **Bundles claude-usage-lens v0.9.1.** Its config file is now read by
+  nlink-jp/toml instead of the third-party `BurntSushi/toml`; it reads as
+  before, unknown keys still refused with the CLI's own message. See the CLI's
+  CHANGELOG.
 
 ## [0.4.0] - 2026-10-14
 

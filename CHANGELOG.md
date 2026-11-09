@@ -3,6 +3,17 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.2] - 2026-11-10
+
+### Fixed
+
+- **Claude Fable 5.2 usage showed as $0.** The bundled CLI is now **v0.9.2**,
+  which prices Claude Fable 5.2 and Claude Mythos 5.2 ($8 / $40 per 1M tokens,
+  cache reads at 0.025×, fast mode at $16 / $80). Until now their turns were
+  counted as free and flagged by the unpriced badge. The app reprices stored
+  history once at its first launch after the update, so past figures correct
+  themselves. See the CLI's CHANGELOG.
+
 ## [0.4.1] - 2026-11-04
 
 ### Changed
@@ -342,7 +353,9 @@ Bundles `claude-usage-lens` **v0.2.2** (which adds its own security hardening).
   cleaner with `MenuBarExtra`/`NSStatusItem`. macOS-only.
 - Requires `claude-usage-lens` with `report --dense` (contiguous daily series).
 
-[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.4.1...v0.4.2
+[0.4.1]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.4...v0.4.0
 [0.3.4]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/nlink-jp/claude-usage-lens-gui/compare/v0.3.2...v0.3.3

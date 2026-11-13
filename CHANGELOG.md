@@ -3,6 +3,21 @@
 All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Analysis window: breakdown labels printed over the bars.** In the By
+  model and Top projects boxes the names were drawn inside the plot, on top
+  of the bars and the amounts. Each breakdown is now a list — name and cost
+  on one line, the bar behind them; a long name is shortened in the middle
+  and shown in full on hover, and the list scrolls when it has more rows than
+  the box holds.
+- **Analysis window: the day axis labelled every day.** The thinning meant to
+  keep about a dozen labels had no effect, so 30 and 90 days were a smear of
+  overlapping dates. The labels are thinned again, and the last day's label
+  no longer lands on top of its neighbour.
+
 ## [0.4.2] - 2026-11-10
 
 ### Fixed

@@ -39,7 +39,7 @@ Sources/ClaudeUsageLens/
   NotificationAuth.swift  pure denied? rules for the notification permission + pane URL
   AppVersion.swift  the build's version for display (pure fallback rule)
   PopoverView.swift today's cost + tokens + last-30 + weekly bar
-  AnalysisView.swift Swift Charts: period total + daily / model / project
+  AnalysisView.swift period total + Swift Charts daily; plain-SwiftUI lists: model / project
   SettingsView.swift weekly-budget Form (shown in the settings Window)
 Info.plist          LSUIElement=true (menu-bar agent, no dock icon)
 scripts/            codesign-darwin-app.sh, notarize-darwin-app.sh, make-icns.sh
@@ -57,6 +57,13 @@ assets/             AppIcon-1024.png (→ AppIcon.icns at build)
   stated once), and `make verify-release` fails if the built bundle's sdk is not
   the current one. Signing, notarization and every test pass either way, so the
   gate is the only thing that can catch it.
+- **Category axes are checked on screen, not assumed.** Built against the
+  macOS 27 SDK, `AxisMarks(values: [String])` did not thin a category axis
+  (every day was labelled) and `AxisMarks(position: .leading)` drew a
+  horizontal bar chart's labels over its bars. So `dayAxis` filters inside the
+  `AxisMarks { value in … }` closure against `axisDayLabels`, and the two
+  breakdowns are plain SwiftUI rows (`barList`), not Charts. Tests cannot see
+  either; after touching a chart, put the view in a real window and capture it.
 - **CLI is the data source.** Don't reimplement parsing/pricing in Swift — call
   the CLI. `Models.swift` must track the CLI's `--json` field names (snake_case
   via CodingKeys). If the CLI's report JSON changes, update these.

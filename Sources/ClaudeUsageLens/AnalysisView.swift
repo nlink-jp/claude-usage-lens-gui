@@ -29,8 +29,8 @@ enum DailyMetric: String, CaseIterable, Identifiable {
 /// breakdowns, over a selectable period. Data comes from the CLI's report --json.
 ///
 /// Controls live in the window toolbar (not the content) so they don't crowd the
-/// title bar; charts fill the available space and the two breakdowns switch from
-/// side-by-side to stacked as the window narrows.
+/// title bar; the daily chart and the two breakdowns (always side by side) share
+/// the available space.
 struct AnalysisView: View {
     @EnvironmentObject var model: UsageModel
     @AppStorage("dailyMetric") private var dailyMetric: DailyMetric = .cost
@@ -39,24 +39,23 @@ struct AnalysisView: View {
     @State private var hoverPoint: CGPoint?
 
     var body: some View {
-        GeometryReader { geo in
-            let wide = geo.size.width > 560
-            VStack(spacing: 14) {
-                periodHeader
+        VStack(spacing: 14) {
+            periodHeader
 
-                dailyBox
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            dailyBox
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                breakdowns(wide: wide)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Always side by side. The stacked variant that stood here applied
+            // below 560 points, which the window's minimum width never reaches.
+            HStack(spacing: 14) { modelBox; projectBox }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if let err = model.lastError {
-                    Text(err).font(.caption).foregroundStyle(.orange).lineLimit(3)
-                }
+            if let err = model.lastError {
+                Text(err).font(.caption).foregroundStyle(.orange).lineLimit(3)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Picker("Period", selection: $model.period) {
@@ -304,13 +303,16 @@ struct AnalysisView: View {
     }
 
     // Thin the labels on long ranges so they don't overlap; show MM-DD to keep
-    // each one short. Shared by both daily charts.
+    // each one short. Shared by both daily charts. The thinning is applied
+    // inside the closure: handing the subset to `AxisMarks(values:)` left every
+    // day labelled on this category axis.
     @AxisContentBuilder
     private func dayAxis(_ keys: [String]) -> some AxisContent {
-        AxisMarks(values: Self.axisDayLabels(keys)) { value in
-            AxisGridLine()
-            AxisTick()
-            if let key = value.as(String.self) {
+        let shown = Set(Self.axisDayLabels(keys))
+        AxisMarks { value in
+            if let key = value.as(String.self), shown.contains(key) {
+                AxisGridLine()
+                AxisTick()
                 AxisValueLabel(Self.shortDay(key), orientation: .vertical)
             }
         }
@@ -342,15 +344,6 @@ struct AnalysisView: View {
         .fixedSize()
     }
 
-    @ViewBuilder
-    private func breakdowns(wide: Bool) -> some View {
-        if wide {
-            HStack(spacing: 14) { modelBox; projectBox }
-        } else {
-            VStack(spacing: 14) { modelBox; projectBox }
-        }
-    }
-
     private var modelBox: some View {
         GroupBox("By model") { barList(model.modelRows) }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -363,35 +356,56 @@ struct AnalysisView: View {
 
     // MARK: - Charts
 
+    /// One breakdown as a compact list: each row is its name and cost on one
+    /// line, with the bar drawn behind them as the row's fill. Plain SwiftUI,
+    /// not a Chart — a category axis drew its labels over the bars and the
+    /// amounts, and nothing here needs an axis.
     @ViewBuilder
     private func barList(_ rows: [Row]) -> some View {
         if rows.isEmpty {
             emptyChart
         } else {
-            // Plot by the full (unique) key so rows with the same basename aren't
-            // collapsed into one category and silently summed; show a short,
-            // collision-disambiguated label on the axis.
+            // Rows are keyed by the full (unique) key; the short label is
+            // disambiguated when two keys share a basename, and the full key
+            // is the row's tooltip.
             let labels = Self.uniqueShortLabels(rows.map(\.key))
-            Chart(rows) { row in
-                BarMark(
-                    x: .value("Cost", row.costUSD),
-                    y: .value("Item", row.key)
-                )
-                .foregroundStyle(Color.accentColor.gradient)
-                .annotation(position: .trailing) {
-                    Text(String(format: "$%.0f", row.costUSD))
-                        .font(.caption2).foregroundStyle(.secondary)
-                }
-            }
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    if let k = value.as(String.self) {
-                        AxisValueLabel(labels[k] ?? k)
+            let peak = rows.map(\.costUSD).max() ?? 0
+            // Scrolls only when there are more rows than the box holds.
+            ScrollView {
+                VStack(spacing: 2) {
+                    ForEach(rows) { row in
+                        HStack(spacing: 8) {
+                            Text(labels[row.key] ?? row.key)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Spacer(minLength: 4)
+                            Text(String(format: "$%.0f", row.costUSD))
+                                .monospacedDigit()
+                                .foregroundStyle(.secondary)
+                                .layoutPriority(1)
+                        }
+                        .font(.caption)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(alignment: .leading) {
+                            GeometryReader { geo in
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(Color.accentColor.opacity(0.25))
+                                    .frame(width: geo.size.width * Self.barFraction(row.costUSD, peak: peak))
+                            }
+                        }
+                        .help(row.key)
                     }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+    }
+
+    /// A row's bar as a share of the box width: the largest row fills it.
+    static func barFraction(_ value: Double, peak: Double) -> Double {
+        guard peak > 0 else { return 0 }
+        return min(max(value / peak, 0), 1)
     }
 
     private var emptyChart: some View {
@@ -482,6 +496,13 @@ struct AnalysisView: View {
             i += step
         }
         if let last = keys.last, picked.last != last {
+            // The last day is always labelled. If the label before it sits
+            // closer than half a step, the two would print over each other,
+            // so the last one takes its place.
+            if let prev = picked.last, let pi = keys.lastIndex(of: prev),
+               keys.count - 1 - pi <= step / 2, picked.count > 1 {
+                picked.removeLast()
+            }
             picked.append(last)
         }
         return picked

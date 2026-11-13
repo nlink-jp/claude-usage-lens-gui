@@ -22,6 +22,9 @@ struct ClaudeUsageLensApp: App {
                 .environmentObject(model)
                 .frame(minWidth: 620, minHeight: 460)
         }
+        // Stated, not left to the content's ideal size: the breakdown lists
+        // would otherwise open the window as tall and wide as their rows.
+        .defaultSize(width: 620, height: 460)
         .windowResizability(.contentMinSize)
 
         // A plain Window (not the Settings scene): a menu-bar (LSUIElement) app

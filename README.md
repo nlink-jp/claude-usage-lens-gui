@@ -31,7 +31,7 @@ macOS 14+ (Apple silicon). Released — signed with Developer ID and notarized.
 - **Version**: the running build's version is printed in the popover footer
   (selectable) — a menu-bar app has no `--version` to run.
 - **Analysis window**: period total plus daily trend, per-model and top-project
-  breakdowns (Swift Charts), over a selectable 7/30/90-day period, with hover
+  breakdowns, over a selectable 7/30/90-day period, with hover
   detail and optional per-model stacking.
 - **Weekly budget monitor** (optional): tracks the week's usage by **cost ($)**
   or **tokens (in+out)** with **two-tier** warning / critical thresholds. As you
